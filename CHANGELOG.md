@@ -260,6 +260,9 @@ publiée, dans les [releases](https://github.com/chrraj7/S-Aloha/releases).
   une valeur texte qui commence par `=`, `+`, `-`, `@`, une tabulation ou un retour chariot
   est précédée d'une apostrophe, pour que le tableur la lise comme du texte ; les nombres
   restent des nombres.
+- **Exports CSV de l'interface** (REP-08, inventaire, synthèse de conformité) : une cellule
+  qui contient un retour chariot est mise entre guillemets, comme dans l'export du journal
+  d'audit ; elle reste une seule cellule à l'ouverture dans le tableur.
 - **Référentiels sans périmètre** (PER-13) : périodes de gel, modèles de changement standard,
   catalogue de demandes, fins de support et catégories se tiennent en Admin ou en gestionnaire
   d'au moins un périmètre, selon le rôle par périmètre et non plus selon le groupe AD (ADR-0014
