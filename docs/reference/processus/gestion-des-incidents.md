@@ -30,7 +30,7 @@ traiter une demande prédéfinie (→ [demandes](gestion-des-demandes.md)).
 |---|---|---|---|---|
 | Créer, modifier, prendre en charge, résoudre | ✔ | ✔ | ✔ | ✅ |
 | Déclarer / retirer le caractère **majeur** | ✘ | ✔ | ✔ | ✅ INC-13 |
-| Clore | ✘ | ✔ | ✔ | 🔜 INC-10 (aujourd'hui : tous) |
+| Clore | ✘ | ✔ | ✔ | ✅ INC-10 (manuelle) |
 | Rouvrir un incident résolu | ✔ | ✔ | ✔ | ✅ (motif et délais INC-11) |
 | Supprimer | ✘ | ✘ | ✔ | ✅ |
 
@@ -97,7 +97,7 @@ stateDiagram-v2
 | En attente → En cours | Tous | | `OnHoldReason` effacé, horloge reprise : l'attente, en heures de service, prolonge les échéances | ✅ INC-07, INC-22 |
 | En cours → Résolu | Tous | Résolution et `ResolutionCode` | `ResolvedAt` | ✅ |
 | Résolu → En cours | Tous | Motif ; dans les 10 jours ouvrés suivant la résolution | `ResolvedAt` effacé, `ReopenCount` + 1 | ✅ INC-11 |
-| Résolu → Clos | Manager, ou automatique après 5 jours ouvrés | | `ClosedAt` | ✅ (horodatage) / 🔜 INC-10 |
+| Résolu → Clos | Manager, ou automatique après 5 jours ouvrés | | `ClosedAt` | ✅ INC-10 (Manager du périmètre) / 🔜 INC-10 (automatique) |
 | Clos → … | — | Aucune : un nouvel incident est créé et relié | | ✅ INC-11 |
 
 ## 5. Règles de gestion
@@ -113,7 +113,7 @@ stateDiagram-v2
 | INC-07 | **En attente** exige un motif fermé ; le temps passé En attente ne compte pas dans les délais SLA | ✅ (motif vérifié à l'entrée En attente : un incident déjà en attente avant la règle reste modifiable) | |
 | INC-08 | La résolution exige un **code de résolution** fermé ; *Doublon* exige un lien vers l'incident conservé | ✅ | 1 |
 | INC-09 | **Transitions contraintes** selon le § 4 (SOC-05) | ✅ | 1 |
-| INC-10 | **Clôture** par un Manager, ou **automatique** 5 jours ouvrés après la résolution sans réouverture | 🔜 | 2 (manuelle) / 3 (auto) |
+| INC-10 | **Clôture** par un Manager, ou **automatique** 5 jours ouvrés après la résolution sans réouverture | ✅ (manuelle : Manager du périmètre, un User est refusé en 403) / 🔜 (automatique) | 3 (auto) |
 | INC-11 | **Réouverture** d'un incident Résolu dans les 10 jours ouvrés, avec motif, `ReopenCount` + 1 ; au-delà, ou une fois Clos, un **nouvel** incident est créé et relié | ✅ | 1 |
 | INC-12 | **Incident majeur** : remonte dans la console des gestionnaires tant qu'il n'est ni Résolu ni Clos | ✅ | |
 | INC-13 | Seul un **Manager** déclare ou retire le caractère majeur ; un incident majeur a toujours priorité P1 et un Manager pour responsable | ✅ (responsable nominatif, désigné par un Manager ; il est gestionnaire du périmètre de l'incident — rôle par périmètre, PER-03, lu dans l'annuaire — vérifié quand il est désigné ou que l'incident devient majeur ; annuaire injoignable : désignation acceptée et tracée au journal de l'API) | 1 |

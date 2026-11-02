@@ -251,6 +251,8 @@ publiée, dans les [releases](https://github.com/chrraj7/S-Aloha/releases).
 
 ### Sécurité
 
+- **Clôture des incidents** (INC-10) : seul un gestionnaire du périmètre clôt un incident
+  résolu ; un User le résout ou le rouvre, mais sa demande de clôture est refusée (403).
 - **Changement autorisé modifié par un gestionnaire** (CHG-07, CHG-20, CHG-21, CHG-22) : la
   modification revient à l'évaluation quand elle est faite par le demandeur, quand le
   changement relève du CAB (Normal à risque Élevé) ou quand le nouveau créneau crée un conflit
