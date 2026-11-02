@@ -20,9 +20,27 @@ public class ServicesController(AppDbContext db) : RecordController<ItService, I
     protected override bool StatusChosenAtCreation => true;
 
     // SLM-11 : un service en service a un propriétaire (responsable du service).
-    protected override string? CheckStatus(ItService e, string status) =>
-        status == "En service" && string.IsNullOrWhiteSpace(e.OwnerId)
-            ? "Désigner le responsable du service : il est obligatoire pour un service en service." : null;
+    // SLM-16 : un service ne se retire pas tant qu'il porte un SLA En vigueur, un incident ou une
+    // demande ouverts ; contrôlé au retrait seulement, un service déjà retiré reste modifiable.
+    protected override async Task<string?> CheckStatusAsync(ItService e, string status)
+    {
+        if (status == "En service" && string.IsNullOrWhiteSpace(e.OwnerId))
+            return "Désigner le responsable du service : il est obligatoire pour un service en service.";
+        if (status != "Retiré" || e.Status == "Retiré") return null;
+
+        var agreements = await Db.Agreements.AsNoTracking()
+            .Where(a => a.ServiceId == e.Id && a.Status == "En vigueur").Select(a => a.Reference).ToListAsync();
+        if (agreements.Count > 0)
+            return $"Ce service porte un SLA En vigueur ({string.Join(", ", agreements)}) : le faire expirer avant de retirer le service.";
+        var incidents = await Db.Incidents.AsNoTracking()
+            .Where(i => i.ServiceId == e.Id && !IncidentManagement.Incident.Done.Contains(i.Status)).Select(i => i.Reference).ToListAsync();
+        var requests = await Db.ServiceRequests.AsNoTracking()
+            .Where(r => r.ServiceId == e.Id && !ServiceRequestManagement.ServiceRequest.Done.Contains(r.Status)).Select(r => r.Reference).ToListAsync();
+        var open = incidents.Concat(requests).ToList();
+        return open.Count > 0
+            ? $"Ce service porte des enregistrements encore ouverts : {string.Join(", ", open)}. Les traiter avant de retirer le service."
+            : null;
+    }
 
     protected override string? Apply(ItService e, ItServiceDto dto, bool creating)
     {

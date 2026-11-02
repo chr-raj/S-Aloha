@@ -208,6 +208,9 @@ publiée, dans les [releases](https://github.com/chrraj7/S-Aloha/releases).
 
 ### Corrigé
 
+- **Retrait d'un service** (SLM-16) : un service ne se retire plus tant qu'il porte un SLA En
+  vigueur, un incident ou une demande ouverts ; le refus cite les références en cause. Un SLA
+  ne continue plus d'alerter pour un service retiré.
 - **« Ouvrir un problème lié »** (INC-14) : le bouton de la fiche d'un incident échouait pour
   un utilisateur de plusieurs périmètres (« Choisir le périmètre de l'enregistrement. ») et,
   pour un Admin, créait le problème dans le périmètre par défaut ; le problème est désormais

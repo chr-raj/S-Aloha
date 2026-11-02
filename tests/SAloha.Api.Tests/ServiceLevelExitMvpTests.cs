@@ -142,6 +142,9 @@ public class ServiceLevelExitMvpTests(ApiFixture api)
         var m = api.Client("Manager", "slm15.manager");
         var svc = await Service(m, "Service SLM-15");
         var inc = await Json(await m.PostAsJsonAsync("/api/incidents", new { title = "Avant retrait", impact = "Faible", urgency = "Faible", serviceId = svc }));
+        // SLM-16 : l'incident est résolu avant le retrait du service.
+        await Json(await m.PutAsJsonAsync($"/api/incidents/{Id(inc)}", new { title = "Avant retrait", impact = "Faible", urgency = "Faible", serviceId = svc,
+            status = "Résolu", resolution = "Rétabli", resolutionCode = "Correctif appliqué" }));
         await Json(await m.PutAsJsonAsync($"/api/services/{svc}", new
         {
             title = "Service SLM-15", status = "Retiré", criticality = "Moyenne", ownerType = "User", ownerId = "svc.owner", ownerDisplayName = "Owner"
@@ -150,7 +153,42 @@ public class ServiceLevelExitMvpTests(ApiFixture api)
         Assert.Equal(HttpStatusCode.BadRequest, (await m.PostAsJsonAsync("/api/incidents", new { title = "Après", impact = "Faible", urgency = "Faible", serviceId = svc })).StatusCode);
         Assert.Equal(HttpStatusCode.BadRequest, (await m.PostAsJsonAsync("/api/agreements", Sla(svc, "SLM-15", null))).StatusCode);
         // L'incident qui le portait déjà se modifie toujours.
-        await Json(await m.PutAsJsonAsync($"/api/incidents/{Id(inc)}", new { title = "Avant retrait (modifié)", impact = "Faible", urgency = "Faible", serviceId = svc }));
+        await Json(await m.PutAsJsonAsync($"/api/incidents/{Id(inc)}", new { title = "Avant retrait (modifié)", impact = "Faible", urgency = "Faible", serviceId = svc,
+            resolution = "Rétabli", resolutionCode = "Correctif appliqué" }));
+    }
+
+    [Fact]
+    public async Task SLM_16_un_service_ne_se_retire_pas_sous_SLA_en_vigueur_ni_avec_un_enregistrement_ouvert()
+    {
+        var m = api.Client("Manager", "slm16.manager");
+        var svc = await Service(m, "Service SLM-16");
+        var url = $"/api/services/{svc}";
+        object Retire() => new
+        {
+            title = "Service SLM-16", status = "Retiré", criticality = "Moyenne", ownerType = "User", ownerId = "svc.owner", ownerDisplayName = "Owner"
+        };
+        var sla = await Json(await m.PostAsJsonAsync("/api/agreements", Sla(svc, "SLM-16", null)));
+        await Json(await m.PutAsJsonAsync($"/api/agreements/{Id(sla)}", Sla(svc, "SLM-16", "En vigueur")));
+        var inc = await Json(await m.PostAsJsonAsync("/api/incidents", new { title = "SLM-16", impact = "Faible", urgency = "Faible", serviceId = svc }));
+        var req = await Json(await m.PostAsJsonAsync("/api/requests", new { title = "SLM-16", requestedItem = "Accès", serviceId = svc }));
+
+        async Task<string> Refused()
+        {
+            var res = await m.PutAsJsonAsync(url, Retire());
+            var body = await res.Content.ReadAsStringAsync();
+            Assert.True(res.StatusCode == HttpStatusCode.BadRequest, $"HTTP {(int)res.StatusCode} : {body}");
+            return body;
+        }
+        Assert.Contains("SLA", await Refused());
+        await Json(await m.PutAsJsonAsync($"/api/agreements/{Id(sla)}", Sla(svc, "SLM-16", "Expiré")));
+        Assert.Contains(inc.GetProperty("reference").GetString()!, await Refused());
+        await Json(await m.PutAsJsonAsync($"/api/incidents/{Id(inc)}", new { title = "SLM-16", impact = "Faible", urgency = "Faible", serviceId = svc,
+            status = "Résolu", resolution = "Rétabli", resolutionCode = "Correctif appliqué" }));
+        Assert.Contains(req.GetProperty("reference").GetString()!, await Refused());
+        await Json(await m.PutAsJsonAsync($"/api/requests/{Id(req)}", new { title = "SLM-16", requestedItem = "Accès", serviceId = svc, status = "Annulée" }));
+
+        var retired = await Json(await m.PutAsJsonAsync(url, Retire()));
+        Assert.Equal("Retiré", retired.GetProperty("status").GetString());
     }
 
     [Fact]

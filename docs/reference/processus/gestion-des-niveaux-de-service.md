@@ -92,7 +92,7 @@ lot 1)** : seules les transitions ci-dessous (SOC-05).
 | Objet | De → Vers | Qui | Conditions (400 sinon) | Statut |
 |---|---|---|---|---|
 | Service | En conception → En service | Manager | Propriétaire renseigné, heures de service | ✅ |
-| Service | En service → Retiré | Manager | Aucun SLA En vigueur ; aucun incident ou demande ouvert sur le service | 🔜 SLM-15 |
+| Service | En service → Retiré | Manager | Aucun SLA En vigueur ; aucun incident ou demande ouvert sur le service | ✅ SLM-16 |
 | SLA | Brouillon → En vigueur | Manager | Service En service ; délais P1–P4 renseignés et croissants (P1 ≤ P2 ≤ P3 ≤ P4) ; `ValidFrom` ; pas d'autre SLA En vigueur pour le même service et le même client | ✅ |
 | SLA | En vigueur → Expiré | Auto, ou Manager | `ValidTo` passé (auto, relevé périodique ; gestionnaires notifiés) | ✅ SLM-04 |
 | SLA | En vigueur → Brouillon | Manager | Renégociation ; les mesures en cours restent sur la version précédente | 🔜 SLM-12 |
@@ -113,6 +113,7 @@ lot 1)** : seules les transitions ci-dessous (SOC-05).
 | SLM-13 | **Délais de prise en charge** P1 à P4 dans le SLA (`ResponseHoursP1…P4`), mesurés sur `FirstResponseAt` des incidents (INC-06) | ✅ (délais dans le SLA ; échéance `ResponseDueAt` de l'incident, comparée à `FirstResponseAt`) / 🔜 (taux de respect, avec SLM-20) | |
 | SLM-14 | **Heures de service structurées** : jours ouvrés, plages horaires, jours fériés, fuseau (défaut : 24 h/24 et 7 j/7) ; tous les délais SLA se comptent dans ces heures | ✅ (`Core/Itil/ServiceCalendar.cs` ; échéances des incidents, INC-22 ; une plage par jour, sans passage de minuit) | |
 | SLM-15 | Un service **Retiré** ne peut plus être choisi pour un nouvel incident, demande ou SLA | ✅ (400 ; les enregistrements qui le portaient le gardent et restent modifiables) | |
+| SLM-16 | Un service **ne se retire pas** tant qu'il porte un SLA En vigueur, un incident ouvert (ni Résolu ni Clos) ou une demande ouverte (ni Satisfaite, Close, Rejetée ni Annulée) | ✅ (400 citant les références en cause ; contrôlé au retrait seulement) | |
 
 ## 6. Délais, calculs et alertes
 
@@ -165,4 +166,5 @@ expirant dans 30 jours (Relances, SLM-24 : notifié aujourd'hui).
 - **SLM-03** — *Étant donné* un SLA Brouillon avec P1 = 8 h et P2 = 4 h, *quand* un Manager le passe En vigueur, *alors* 400 « délais non croissants » ; un second SLA En vigueur pour le même service et le même client, 409.
 - **SLM-04** — *Étant donné* un SLA En vigueur dont `ValidTo` était hier, *alors* il est Expiré.
 - **SLM-14** — *Étant donné* des heures de service Lun–Ven 8 h–18 h, *quand* un incident P3 (24 h) est créé vendredi à 17 h, *alors* son échéance est mercredi à 11 h (1 h vendredi + 10 h lundi + 10 h mardi + 3 h mercredi = 24 h de service).
+- **SLM-16** — *Étant donné* un service En service portant un SLA En vigueur et un incident En cours, *quand* un Manager le passe Retiré, *alors* 400 citant le SLA ; une fois le SLA Expiré, 400 citant l'incident ; une fois l'incident résolu (et aucune demande ouverte), le retrait est accepté.
 - **SLM-20** — *Étant donné* 10 incidents P2 du service en octobre, dont 9 résolus dans le délai, *alors* le respect d'octobre vaut 90 %.
