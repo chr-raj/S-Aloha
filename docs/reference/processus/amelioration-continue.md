@@ -76,8 +76,7 @@ stateDiagram-v2
     Abandonnee : Abandonnée
 ```
 
-**Aujourd'hui (✅)** : conditions de statut tenues, autres transitions libres. **Cible
-(🔜 CSI-11, lot 1)** : seules les transitions ci-dessous (SOC-05).
+**Transitions (✅ CSI-11)** : seules les transitions ci-dessous sont permises (SOC-05), avec les conditions de statut.
 
 | De → Vers | Qui | Conditions (400 sinon) | Effets | Statut |
 |---|---|---|---|---|

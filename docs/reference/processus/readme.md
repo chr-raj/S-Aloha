@@ -24,12 +24,12 @@
 | [Conformité NIS 2](conformite-nis2.md) | NIS | 23 | 0 | 0 | 0 |
 | [Déclarations réglementaires](declarations-reglementaires.md) | DRG | 12 | 0 | 0 | 0 |
 | [Gestion de projet](gestion-de-projet.md) | PRJ | 23 | 0 | 0 | 0 |
-| [Périmètres](../perimetres.md) | PER | 12 | 0 | 0 | 0 |
+| [Périmètres](../perimetres.md) | PER | 13 | 0 | 0 | 0 |
 | [Recherche](../recherche.md) | RAG | 11 | 1 | 0 | 1 |
 | [Reporting](../reporting.md) | REP | 34 | 0 | 0 | 0 |
-| **Total** | | **338** | **1** | **0** | **1** |
+| **Total** | | **339** | **1** | **0** | **1** |
 
-*Comptes au 2026-10-16 (main `af38031`), sur les tableaux de règles (hors indicateurs). Une
+*Comptes au 2026-11-02 (main `ba2082d`), sur les tableaux de règles (hors indicateurs). Une
 règle faite en partie compte ✅ (7 règles, la part restante est décrite dans son statut).
 Seule règle de lot 1 restante : RAG-10, en attente d'un jeu de requêtes réelles.*
 

@@ -91,10 +91,9 @@ stateDiagram-v2
     EnCours : En cours
 ```
 
-**Aujourd'hui (✅)** : statuts Soumise, Approuvée, Rejetée, En cours, Satisfaite, Close ;
-approbation réservée aux gestionnaires ; traitement seulement après approbation.
-**Cible (🔜 REQ-08, lot 1)** : seules les transitions ci-dessous (SOC-05) ; statut
-*Annulée* ajouté.
+**Transitions (✅ REQ-08)** : statuts Soumise, Approuvée, Rejetée, Annulée, En cours,
+Satisfaite, Close ; approbation réservée aux gestionnaires ; traitement seulement après
+approbation ; seules les transitions ci-dessous sont permises (SOC-05).
 
 | De → Vers | Qui | Conditions (400 sinon) | Effets | Statut |
 |---|---|---|---|---|

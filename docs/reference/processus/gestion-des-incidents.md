@@ -85,8 +85,8 @@ stateDiagram-v2
     Resolu : Résolu
 ```
 
-**Aujourd'hui (✅)** : transitions libres ; Résolu et Clos exigent une résolution.
-**Cible (🔜 INC-09, lot 1)** : seules les transitions ci-dessous (SOC-05).
+**Transitions (✅ INC-09)** : seules les transitions ci-dessous sont permises (SOC-05) ;
+Résolu et Clos exigent une résolution.
 
 | De → Vers | Qui | Conditions (400 sinon) | Effets | Statut |
 |---|---|---|---|---|
