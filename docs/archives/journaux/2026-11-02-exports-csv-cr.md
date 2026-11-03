@@ -1,8 +1,6 @@
-# Journal du 2026-11-02
+# 2026-11-02 — Exports CSV de l'interface : retour chariot entre guillemets (REP-08)
 
-<sub>[← Archives](readme.md)</sub>
-
-## Exports CSV de l'interface : retour chariot entre guillemets (REP-08)
+<sub>[← Archives](../readme.md)</sub>
 
 - **Quoi** : une cellule des exports de l'interface (reporting, inventaire, synthèse de
   conformité) qui contient un retour chariot est mise entre guillemets, comme celle qui

@@ -11,7 +11,9 @@ section **Mise à jour** de chaque étape avant de mettre à jour une installati
 
 Le détail au jour le jour (sujets traités, raisons, commits) est dans les
 [journaux](docs/archives/readme.md) ; les notes complètes de chaque version, une fois
-publiée, dans les [releases](https://github.com/chrraj7/S-Aloha/releases).
+publiée, dans les [releases](https://github.com/chrraj7/S-Aloha/releases). Les notes des
+dernières fusions attendent dans [`changelog.d/`](changelog.d/readme.md) d'être versées
+ci-dessous, chaque lundi.
 
 ## Non publié
 
@@ -260,9 +262,6 @@ publiée, dans les [releases](https://github.com/chrraj7/S-Aloha/releases).
   une valeur texte qui commence par `=`, `+`, `-`, `@`, une tabulation ou un retour chariot
   est précédée d'une apostrophe, pour que le tableur la lise comme du texte ; les nombres
   restent des nombres.
-- **Exports CSV de l'interface** (REP-08, inventaire, synthèse de conformité) : une cellule
-  qui contient un retour chariot est mise entre guillemets, comme dans l'export du journal
-  d'audit ; elle reste une seule cellule à l'ouverture dans le tableur.
 - **Référentiels sans périmètre** (PER-13) : périodes de gel, modèles de changement standard,
   catalogue de demandes, fins de support et catégories se tiennent en Admin ou en gestionnaire
   d'au moins un périmètre, selon le rôle par périmètre et non plus selon le groupe AD (ADR-0014

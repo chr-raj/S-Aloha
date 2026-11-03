@@ -253,7 +253,7 @@ Détails (registre des modules, thème, design) : [frontend.md](frontend.md).
 ### Intégration continue
 
 [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) rejoue ces contrôles à chaque
-push sur `main` et sur chaque pull request, en huit jobs : **API** (tests ci-dessus et
+push sur `main` et sur chaque pull request, en onze jobs : **API** (tests ci-dessus et
 `dotnet list package --vulnerable`), **Interface** (`npm ci`, tests, build,
 `npm audit --audit-level=high`), **Documentation** (`scripts/check-docs.py`) et
 **Images Docker** (build des deux images, sans publication), **DCO** (chaque commit porte le
@@ -268,13 +268,29 @@ vierge (annuaire Samba AD, API, interface, sans le service d'embeddings), les do
 d'exemple chargées par l'API (`demo/donnees/charger.py`), puis
 [`scripts/recette.py`](../../scripts/recette.py) par l'interface : connexion des trois rôles,
 jeu de données complet, santé de la base et de l'annuaire ; c'est la recette avant fusion ;
+sur une pull request seulement, **Preuve** ([`scripts/preuve.py`](../../scripts/preuve.py) :
+les tests ajoutés ou modifiés par la PR, rejoués sur le code de la base, doivent échouer — sinon
+ils ne prouvent pas le changement ; un code modifié sans test modifié échoue aussi ; exception
+par l'étiquette `preuve-non-requise` du mainteneur) et **Dépendances ajoutées**
+(`actions/dependency-review-action` : vulnérabilité haute ou critique, licence incompatible
+avec l'AGPLv3) ; **Workflows** : actionlint et zizmor (injection par expression, déclencheurs
+dangereux, permissions) sur `.github/workflows/`, outils épinglés par version et empreinte ;
 sur un push sur `main` seulement, une fois les quatre premiers et la Recette verts,
 **Images edge** publie l'état de `main` sur ghcr.io sous le tag `edge`
 ([exploitation § Versions et images](exploitation.md#versions-et-images)). Actions épinglées
 par SHA, jeton en lecture seule (écriture des paquets pour le seul job Images edge). CodeQL (C#, JavaScript) et Dependabot
 ([`.github/dependabot.yml`](../../.github/dependabot.yml)) complètent ; les mises à jour
 Dependabot mineures ou correctives se fusionnent d'elles-mêmes une fois la CI au vert
-([`.github/workflows/dependabot.yml`](../../.github/workflows/dependabot.yml)). Deux workflows
+([`.github/workflows/dependabot.yml`](../../.github/workflows/dependabot.yml)). [`garde-fous.yml`](../../.github/workflows/garde-fous.yml)
+([`scripts/garde-fous.py`](../../scripts/garde-fous.py)), rejoué quand une étiquette change,
+refuse une PR qui supprime, réduit ou désactive des tests (`Skip`, `.skip`, `.only`, moins
+d'assertions) ou qui modifie l'outillage de vérification (workflows, scripts de contrôle,
+configuration des tests) sans l'étiquette `outillage` du mainteneur ; il pose aussi la classe
+de risque de la PR d'après ses chemins : `risque-doc`, `risque-code` ou `risque-sensible`
+(authentification, données et migrations, périmètres, coffre, pièces jointes, exposition,
+dépendances, chaîne de construction). [`filet.yml`](../../.github/workflows/filet.yml) ouvre
+une issue `main-rouge` quand la CI de `main` échoue, avec le commit, sa PR et la commande
+d'annulation. Deux workflows
 d'entretien : [`wiki.yml`](../../.github/workflows/wiki.yml) publie le wiki à chaque poussée
 de `main` qui touche `docs/` ; [`commentaires.yml`](../../.github/workflows/commentaires.yml)
 retire des textes du compte du mainteneur (commentaires, descriptions et revues de PR) un
