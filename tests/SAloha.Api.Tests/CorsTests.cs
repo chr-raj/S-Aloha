@@ -12,13 +12,16 @@ public sealed class CorsTests(ApiFixture api) : IDisposable
 {
     private const string Allowed = "https://frontend.example";
 
-    private readonly WebApplicationFactory<Program> _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(b => b
-        .UseSetting("ConnectionStrings:Default", api.Database().Database.GetConnectionString())
-        .UseSetting("Jwt:Key", ApiFixture.JwtKey)
-        .UseSetting("Jwt:Issuer", "S-Aloha")
-        .UseSetting("Discovery:IntervalMinutes", "0")
-        .UseSetting("Discovery:VaultKey", "cle-du-coffre-de-test-uniquement-0123456789")
-        .UseSetting("Cors:AllowedOrigins:0", Allowed));
+    private readonly WebApplicationFactory<Program> _factory = Factory(api, Allowed);
+
+    private static WebApplicationFactory<Program> Factory(ApiFixture api, string origin) =>
+        new WebApplicationFactory<Program>().WithWebHostBuilder(b => b
+            .UseSetting("ConnectionStrings:Default", api.Database().Database.GetConnectionString())
+            .UseSetting("Jwt:Key", ApiFixture.JwtKey)
+            .UseSetting("Jwt:Issuer", "S-Aloha")
+            .UseSetting("Discovery:IntervalMinutes", "0")
+            .UseSetting("Discovery:VaultKey", "cle-du-coffre-de-test-uniquement-0123456789")
+            .UseSetting("Cors:AllowedOrigins:0", origin));
 
     public void Dispose() => _factory.Dispose();
 
@@ -34,6 +37,15 @@ public sealed class CorsTests(ApiFixture api) : IDisposable
     public async Task S3_une_origine_listee_recoit_l_autorisation()
     {
         var res = await Preflight(_factory.CreateClient(), Allowed);
+        Assert.Equal(Allowed, Assert.Single(res.Headers.GetValues("Access-Control-Allow-Origin")));
+    }
+
+    [Fact]
+    public async Task S3_une_origine_configuree_avec_une_barre_finale_est_admise()
+    {
+        // #239 : l'en-tête Origin n'a jamais de barre finale ; la valeur configurée la perd.
+        using var factory = Factory(api, Allowed + "/");
+        var res = await Preflight(factory.CreateClient(), Allowed);
         Assert.Equal(Allowed, Assert.Single(res.Headers.GetValues("Access-Control-Allow-Origin")));
     }
 

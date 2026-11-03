@@ -124,7 +124,10 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 // S3 : origines externes admises, aucune par défaut — le frontend passe par nginx (même
 // origine) et Vite proxifie /api en développement. Sans cookie : le jeton porte l'appel.
-var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+// #239 : l'en-tête Origin n'a jamais de barre finale et WithOrigins compare tel quel : une
+// valeur « https://portail/ » refuserait sans message l'origine que l'exploitant croit ouvrir.
+var corsOrigins = (builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [])
+    .Select(o => o.Trim().TrimEnd('/')).ToArray();
 builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
     p.WithOrigins(corsOrigins).AllowAnyHeader().AllowAnyMethod()));
 
