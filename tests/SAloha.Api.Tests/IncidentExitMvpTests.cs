@@ -92,6 +92,22 @@ public class IncidentExitMvpTests(ApiFixture api)
             Assert.Contains("Incident majeur : désigner un gestionnaire", await refused.Content.ReadAsStringAsync());
         }
 
+        // La résolution d'un parent ne l'en sort pas non plus : il reste Nouveau, listé avec sa raison (INC-16).
+        var parent = await Json(await m.PostAsJsonAsync("/api/incidents", new
+        {
+            title = "INC-13 parent", impact = "Faible", urgency = "Faible", ownerType = "User", ownerId = "inc13c.tech", ownerDisplayName = "Tech"
+        }));
+        await Json(await m.PutAsJsonAsync($"{url}/parent", new { parentReference = parent.GetProperty("reference").GetString() }));
+        var resolved = await Json(await m.PutAsJsonAsync($"/api/incidents/{Id(parent)}", new
+        {
+            title = "INC-13 parent", impact = "Faible", urgency = "Faible", status = "Résolu", ownerType = "User", ownerId = "inc13c.tech",
+            ownerDisplayName = "Tech", resolution = "Rétabli", resolutionCode = "Correctif appliqué"
+        }));
+        var left = Assert.Single(resolved.GetProperty("unresolvedChildren").EnumerateArray());
+        Assert.Equal(inc.GetProperty("reference").GetString(), left.GetProperty("reference").GetString());
+        Assert.Contains("responsable", left.GetProperty("reason").GetString());
+        Assert.Equal("Nouveau", (await Json(await m.GetAsync(url))).GetProperty("status").GetString());
+
         // Un gestionnaire désigné : la prise en charge passe, la console n'alerte plus.
         await Json(await m.PutAsJsonAsync(url, Inc("En cours", "chef.inc13c")));
         Assert.Equal("En cours", Status(await Json(await m.GetAsync("/api/console"))));

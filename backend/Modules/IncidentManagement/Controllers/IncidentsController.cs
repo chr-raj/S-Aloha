@@ -214,6 +214,12 @@ public class IncidentsController(AppDbContext db) : RecordController<Incident, I
                 _unresolvedChildren.Add(new(child.Reference, "Incident majeur sans problème relié (INC-15) : le relier à un problème, puis le résoudre."));
                 continue;
             }
+            // INC-13 : la cascade ne sort pas de « Nouveau » un majeur sans responsable.
+            if (child.IsMajor && child.Status == "Nouveau" && string.IsNullOrWhiteSpace(child.OwnerId))
+            {
+                _unresolvedChildren.Add(new(child.Reference, "Incident majeur sans responsable (INC-13) : désigner un gestionnaire pour responsable, puis le résoudre."));
+                continue;
+            }
             if (child.Status == "En attente" && child.OnHoldSince is { } since)
                 child.HeldMinutes += (int)Math.Round((await IncidentSla.CalendarAsync(Db, child.ServiceId)).Between(since, now).TotalMinutes);
             var from = child.Status;
