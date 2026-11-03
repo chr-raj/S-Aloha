@@ -415,8 +415,11 @@ d'action](../../plan-action.md#découverte-automatique-et-cmdb-augmentée-f13)) 
 ## 8. Console et indicateurs
 
 Console : mes CI (Mon travail) ✅ ; actifs du sas de staging en conflit ou à rapprocher,
-dont les actifs inconnus (Décisions, gestionnaires, CFG-40) ✅. À venir : CI à vérifier
-(Relances, CFG-15), CI Hors service depuis plus de 7 jours (Relances, gestionnaires, lot 2).
+dont les actifs inconnus (Décisions, gestionnaires, CFG-40) ✅ ; CI à vérifier — CI En service
+non vérifiés depuis 12 mois, même calcul que la relance : ceux dont je suis propriétaire,
+groupes compris (Mon travail), et ceux des périmètres gérés (Relances, gestionnaires), avec la
+date de la dernière vérification (CFG-15) ✅. À venir : CI Hors service depuis plus de 7 jours
+(Relances, gestionnaires, lot 2).
 
 Pages de la pratique : registre des CI ✅, inventaire (CFG-39) ✅, sas de staging et fiche
 d'un actif (gestionnaires, CFG-40) ✅ ; paramétrage de la découverte (tâches, coffre, fins

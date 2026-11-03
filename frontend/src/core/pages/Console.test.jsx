@@ -10,11 +10,13 @@ const data = {
   myAssignments: [item('project', 4, 'PRJ-2026-0004', 'Portail RH', 'En cours')],
   myProjectAlerts: [item('project', 4, 'PRJ-2026-0004', 'Portail RH', '1 jalon(s) en retard')],
   myChangeFollowUps: [item('change', 9, 'CHG-2026-0009', 'Mise à jour du pare-feu', 'Fin planifiée passée sans mise en œuvre')],
+  myCisToVerify: [item('ci', 6, 'CI-2026-0006', 'srv-paie', 'Dernière vérification : 02/10/2025')],
   management: {
     toQualify: [], inAnalysisNoRootCause: [], knownErrorsNoAction: [], overdueActions: [], majorIncidents: [], slaIncidents: [],
     decisions: [item('project', 5, 'PRJ-2026-0005', 'Refonte intranet', 'À valider')], reviewsDue: [],
     overdueRequests: [item('request', 2, 'REQ-2026-0002', 'Badge', 'Approuvée')],
     projectAlerts: [item('project', 4, 'PRJ-2026-0004', 'Portail RH', 'délai hors tolérance')],
+    cisToVerify: [item('ci', 7, 'CI-2026-0007', 'sw-coeur', 'Dernière vérification : 15/09/2025')],
     changeFollowUps: [item('change', 8, 'CHG-2026-0008', 'Migration DNS', 'Mis en œuvre depuis plus de 2 jours ouvrés, sans clôture')],
     regulatory: [item('notification', 3, 'DRG-2026-0003', 'NIS 2 — INC-2026-0040', 'Alerte précoce : 4 h 10 restantes')]
   }
@@ -48,5 +50,19 @@ describe('Console : changements à relancer (CHG-30, CHG-31), déclarations rég
     expect(screen.getByText('Mis en œuvre depuis plus de 2 jours ouvrés, sans clôture')).toBeTruthy()
     expect(screen.getByText('Déclarations réglementaires')).toBeTruthy()
     expect(screen.getByText('Alerte précoce : 4 h 10 restantes')).toBeTruthy()
+  })
+})
+
+describe('Console : CI à vérifier (CFG-15)', () => {
+  it('montre mes CI à vérifier dans Mon travail et ceux des périmètres gérés dans Relances, compteurs compris', async () => {
+    render(<MemoryRouter><Console /></MemoryRouter>)
+    expect(await screen.findByText('Mes CI à vérifier')).toBeTruthy()
+    expect(screen.getByText('Dernière vérification : 02/10/2025')).toBeTruthy()
+    expect(screen.getByText('CI à vérifier')).toBeTruthy()
+    expect(screen.getByText('Dernière vérification : 15/09/2025')).toBeTruthy()
+    // Relances : demandes, projets, changements et CI à vérifier ; Mon travail : 1 dossier, 1 projet, 1 changement, 1 CI.
+    const tile = label => screen.getByText(label, { selector: '.c-tile-l' }).parentElement.querySelector('.c-tile-n').textContent
+    expect(tile('Relances')).toBe('4')
+    expect(tile('Mon travail')).toBe('4')
   })
 })

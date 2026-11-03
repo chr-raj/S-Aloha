@@ -94,4 +94,37 @@ public class ConfigurationImpactTests(ApiFixture api)
             .Where(n => n.GetProperty("reference").GetString() == Ref(srv)).Select(n => n.GetProperty("event").GetString()!).ToList();
         Assert.Contains(events, e => e.StartsWith("Fiche à vérifier"));
     }
+
+    [Fact]
+    public async Task CFG_15_console_CI_a_verifier_pour_le_proprietaire_et_le_gestionnaire()
+    {
+        var (srv, app, _, m) = await Setup("cfg15c");
+        var owner = api.Client("User", "owner.cfg15c");
+        await using (var db = api.Database())
+        {
+            (await db.ConfigurationItems.FirstAsync(c => c.Id == Id(srv))).LastVerifiedAt = DateTime.UtcNow.AddMonths(-13);
+            await db.SaveChangesAsync();
+        }
+        async Task<(List<string> Mine, List<string> Managed)> Console(HttpClient client)
+        {
+            var c = await Json(await client.GetAsync("/api/console"));
+            var managed = c.GetProperty("management").ValueKind == JsonValueKind.Object
+                ? Refs(c.GetProperty("management").GetProperty("cisToVerify")) : [];
+            return (Refs(c.GetProperty("myCisToVerify")), managed);
+        }
+
+        // Le serveur non vérifié depuis 13 mois apparaît ; l'application, créée à l'instant, non.
+        var (mine, _) = await Console(owner);
+        Assert.Contains(Ref(srv), mine);
+        Assert.DoesNotContain(Ref(app), mine);
+        var (_, managed) = await Console(m);
+        Assert.Contains(Ref(srv), managed);
+        Assert.DoesNotContain(Ref(app), managed);
+        Assert.DoesNotContain(Ref(srv), (await Console(api.Client("User", "autre.cfg15c"))).Mine);
+
+        // Vérifié : il sort des deux listes.
+        await Json(await owner.PostAsync($"/api/configuration-items/{Id(srv)}/verify", null));
+        Assert.DoesNotContain(Ref(srv), (await Console(owner)).Mine);
+        Assert.DoesNotContain(Ref(srv), (await Console(m)).Managed);
+    }
 }
