@@ -135,6 +135,9 @@ Réglages du dépôt GitHub public, en place depuis le 2026-10-06 :
 | Dependabot (alertes, correctifs, versions) | Alerte et PR de correctif dès qu'un avis touche une dépendance ; mises à jour hebdomadaires groupées (npm, NuGet, Docker, Actions) ; une mise à jour mineure ou corrective se fusionne d'elle-même, CI au vert, une majeure reste à la main |
 | CodeQL (configuration par défaut) | Analyse statique C# et JavaScript à chaque push et chaque semaine |
 | CI ([architecture § Intégration continue](architecture.md#intégration-continue)) | Tests, build, audit des dépendances, santé de la doc |
+| Preuve et garde-fous | Une PR prouve son changement par un test qui échoue sans lui ; elle ne peut ni retirer ni désactiver de test, ni modifier l'outillage de vérification sans l'accord du mainteneur ; sa classe de risque est calculée d'après ses chemins |
+| Revue des dépendances et des workflows | Dépendance ajoutée vulnérable (haute, critique) ou sous licence incompatible refusée ; workflows analysés par actionlint et zizmor |
+| Filet après fusion | CI de `main` rouge → issue `main-rouge` avec la commande d'annulation |
 | Règles de `main` | Ni suppression ni push forcé ; toute modification passe par une pull request, CI au vert (DCO et Recette compris) et historique linéaire. Aucune dérogation, administrateur compris |
 | Actions | Seules les actions publiées par GitHub ; jeton en lecture seule ; workflows d'un contributeur externe soumis à approbation |
 
