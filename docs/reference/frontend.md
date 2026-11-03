@@ -246,7 +246,7 @@ Un module `soon` apparaît grisé, non cliquable, avec le badge « Bientôt ».
 | [Configuration](processus/gestion-de-la-configuration.md) | Registre des CI (filtre par type) | Tous | CFG-01, CFG-07 | ✅ |
 | | Inventaire : portefeuille applicatif et actifs matériels, export CSV, impression | Tous | CFG-39 | ✅ |
 | | Sas de staging : tuiles-filtres (à traiter, en conflit, inconnus, rapprochés, ignorés, relations proposées), fiche d'un actif avec la décision (rapprocher du CI proposé, créer le CI pré-rempli, rapprocher d'un autre CI, ignorer, rétablir), la comparaison découvert / CMDB, et ce que la découverte a vu (bannières, interfaces, services, ports en écoute, logiciels filtrables) ; vue Relations proposées (« Héberge », « Se connecte à » : accepter une fois les deux actifs rapprochés, ou écarter) | Manager, Admin | CFG-40 à CFG-42, CFG-49 à CFG-56 | ✅ |
-| | CI à vérifier | Tous (propriétaires), Manager | CFG-15 | 🔜 |
+| | CI à vérifier : listes de la console (Mon travail pour le propriétaire, Relances pour le gestionnaire) | Tous (propriétaires), Manager | CFG-15 | ✅ |
 | [Niveaux de service](processus/gestion-des-niveaux-de-service.md) | Catalogue des services | Tous | SLM-01 | ✅ |
 | | Accords (SLA) | Tous | SLM-02 | ✅ |
 | | Respect des SLA (tableau mensuel) | Tous | SLM-20, SLM-21 | 🔜 |

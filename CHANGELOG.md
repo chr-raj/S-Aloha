@@ -17,6 +17,11 @@ publiée, dans les [releases](https://github.com/chrraj7/S-Aloha/releases).
 
 ### Ajouté
 
+- **Console : CI à vérifier** (CFG-15) : les CI En service dont la fiche n'a pas été vérifiée
+  depuis 12 mois apparaissent dans Mon travail pour leur propriétaire (groupes compris) et
+  dans Relances pour les gestionnaires de leur périmètre, avec la date de la dernière
+  vérification ; compteurs des tuiles inclus.
+
 - **Indicateurs de conformité et de configuration** : écarts NIS 2 traités et évolution du score
   (NIS-30, NIS-31), disponibilité des services sous SLA (SLM-31), délais et abandons des
   améliorations (CSI-30 à CSI-32), usage et fraîcheur des articles (KB-30 à KB-32), délai de
