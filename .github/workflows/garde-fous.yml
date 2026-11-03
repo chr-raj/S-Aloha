@@ -56,7 +56,8 @@ jobs:
         run: |
           classe=$(python3 scripts/garde-fous.py "$BASE" "$HEAD" --risque)
           echo "Classe : $classe"
+          # API REST : `gh pr edit` échoue sur la dépréciation des Projects classiques.
           for e in risque-doc risque-code risque-sensible; do
-            if [ "$e" != "$classe" ]; then gh pr edit "$PR" -R "$GITHUB_REPOSITORY" --remove-label "$e" >/dev/null 2>&1 || true; fi
+            if [ "$e" != "$classe" ]; then gh api -X DELETE "repos/$GITHUB_REPOSITORY/issues/$PR/labels/$e" >/dev/null 2>&1 || true; fi
           done
-          gh pr edit "$PR" -R "$GITHUB_REPOSITORY" --add-label "$classe"
+          gh api -X POST "repos/$GITHUB_REPOSITORY/issues/$PR/labels" -f "labels[]=$classe" >/dev/null
