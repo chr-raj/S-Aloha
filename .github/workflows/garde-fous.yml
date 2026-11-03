@@ -1,0 +1,62 @@
+# Garde-fous de chaque pull request (scripts/garde-fous.py) : aucun test supprimé, réduit
+# ou désactivé ; outillage de vérification modifié seulement avec l'étiquette `outillage`
+# du mainteneur. Rejoué quand une étiquette change. Classe de risque posée en étiquette
+# d'après les chemins touchés : `risque-doc`, `risque-code` ou `risque-sensible`.
+name: Garde-fous
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: garde-fous-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  garde-fous:
+    name: Garde-fous
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Tests, outillage
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+          ETIQUETTES: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+          AUTEUR: ${{ github.event.pull_request.user.login }}
+        run: python3 scripts/garde-fous.py "$BASE" "$HEAD" --etiquettes "$ETIQUETTES" --auteur "$AUTEUR"
+
+  risque:
+    name: Classe de risque
+    # Ni fork ni Dependabot : leur jeton est en lecture seule.
+    if: github.event.action != 'labeled' && github.event.action != 'unlabeled' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Étiquette
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+          PR: ${{ github.event.pull_request.number }}
+        run: |
+          classe=$(python3 scripts/garde-fous.py "$BASE" "$HEAD" --risque)
+          echo "Classe : $classe"
+          for e in risque-doc risque-code risque-sensible; do
+            if [ "$e" != "$classe" ]; then gh pr edit "$PR" -R "$GITHUB_REPOSITORY" --remove-label "$e" >/dev/null 2>&1 || true; fi
+          done
+          gh pr edit "$PR" -R "$GITHUB_REPOSITORY" --add-label "$classe"

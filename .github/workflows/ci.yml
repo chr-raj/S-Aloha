@@ -1,7 +1,9 @@
 # Contrôles de chaque push sur main et de chaque pull request : tests de l'API
 # (PostgreSQL réel via Testcontainers), tests et build de l'interface, santé
 # de la documentation, build des deux images, signature DCO de chaque commit
-# (ADR-0010), recette de la pile de démonstration sur une base vierge. Sur main, une fois tout vert, images de
+# (ADR-0010), recette de la pile de démonstration sur une base vierge. Sur une pull request,
+# en plus : preuve que ses tests échouent sans son changement, dépendances ajoutées
+# (vulnérabilités, licences), analyse des workflows. Sur main, une fois tout vert, images de
 # développement « edge » publiées sur ghcr.io (aucun tag git, aucune release).
 # Actions épinglées par SHA (tenues à jour par Dependabot) ; jeton en lecture seule.
 name: CI
@@ -107,6 +109,69 @@ jobs:
         if: always()
         run: $COMPOSE down -v
 
+  preuve:
+    # Les tests ajoutés ou modifiés par la PR, rejoués sur le code de la base : ils doivent
+    # échouer, sinon ils ne prouvent pas le changement (scripts/preuve.py). Exception :
+    # étiquette `preuve-non-requise` posée par le mainteneur, puis relancer ce job.
+    name: Preuve
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: 10.0.x
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: Tests de la PR sur la base
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+          ETIQUETTES: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+        run: python3 scripts/preuve.py "$BASE" "$HEAD" --etiquettes "$ETIQUETTES"
+
+  dependances:
+    # Dépendances ajoutées ou changées par la PR : vulnérabilité haute ou critique, ou
+    # licence incompatible avec l'AGPLv3, refusées.
+    name: Dépendances ajoutées
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/dependency-review-action@a1d282b36b6f3519aa1f3fc636f609c47dddb294 # v5.0.0
+        with:
+          fail-on-severity: high
+          deny-licenses: SSPL-1.0, BUSL-1.1, Elastic-2.0, CC-BY-NC-4.0, CC-BY-NC-SA-4.0, Commons-Clause
+          comment-summary-in-pr: never
+
+  workflows:
+    # Workflows de .github/ : syntaxe et expressions (actionlint), sécurité (zizmor :
+    # injection, déclencheurs, permissions). Outils épinglés par version et empreinte.
+    name: Workflows
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: actionlint 1.7.12
+        run: |
+          curl -sSfL -o actionlint.tgz https://github.com/rhysd/actionlint/releases/download/v1.7.12/actionlint_1.7.12_linux_amd64.tar.gz
+          echo "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8  actionlint.tgz" | sha256sum -c -
+          tar xzf actionlint.tgz actionlint
+          ./actionlint -color
+      - name: zizmor 1.31.1
+        run: |
+          pip download --quiet --no-deps --only-binary=:all: -d whl zizmor==1.31.1
+          echo "58e878eb2dbd2c6183c105e1ac28c14f7dd1eca44a783f1fe2a69647d012c410  whl/zizmor-1.31.1-py3-none-manylinux_2_28_x86_64.whl" | sha256sum -c -
+          python3 -m zipfile -e whl/zizmor-1.31.1-py3-none-manylinux_2_28_x86_64.whl zizmor-whl
+          chmod +x zizmor-whl/zizmor-1.31.1.data/scripts/zizmor
+          zizmor-whl/zizmor-1.31.1.data/scripts/zizmor --offline --format github .github/workflows/
+
   edge:
     # Images de développement : l'état de main, à chaque fusion. « latest » et les
     # versions restent l'affaire de publication.yml (tag vX.Y.Z).
@@ -122,7 +187,10 @@ jobs:
         with:
           persist-credentials: false
       - name: Connexion au registre
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+        env:
+          JETON: ${{ secrets.GITHUB_TOKEN }}
+          ACTEUR: ${{ github.actor }}
+        run: echo "$JETON" | docker login ghcr.io -u "$ACTEUR" --password-stdin
       - name: Construction et envoi
         env:
           VERSION: 0.0.0-edge
