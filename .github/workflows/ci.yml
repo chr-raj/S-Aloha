@@ -16,9 +16,12 @@ on:
 permissions:
   contents: read
 
+# Une pull request n'a que sa dernière exécution (les précédentes s'annulent) ; sur main,
+# chaque commit garde la sienne jusqu'au bout (groupe par commit) : une fusion qui en suit
+# une autre n'efface pas le contrôle, Recette et DCO compris, de la précédente.
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.event_name == 'pull_request' && github.ref || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   api:
@@ -194,19 +197,34 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: [api, web, docs, images, recette]
     runs-on: ubuntu-latest
+    # Une publication à la fois ; un commit dépassé par main ne republie pas edge.
+    concurrency:
+      group: edge
+      cancel-in-progress: false
     permissions:
       contents: read
       packages: write
     steps:
+      - name: Toujours la tête de main ?
+        id: tete
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tete=$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)
+          if [ "$tete" = "$GITHUB_SHA" ]; then echo "publier=oui" >> "$GITHUB_OUTPUT"
+          else echo "main est à ${tete:0:7} : edge sera publié par son exécution."; echo "publier=non" >> "$GITHUB_OUTPUT"; fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        if: steps.tete.outputs.publier == 'oui'
         with:
           persist-credentials: false
       - name: Connexion au registre
+        if: steps.tete.outputs.publier == 'oui'
         env:
           JETON: ${{ secrets.GITHUB_TOKEN }}
           ACTEUR: ${{ github.actor }}
         run: echo "$JETON" | docker login ghcr.io -u "$ACTEUR" --password-stdin
       - name: Construction et envoi
+        if: steps.tete.outputs.publier == 'oui'
         env:
           VERSION: 0.0.0-edge
           COMMIT: ${{ github.sha }}
