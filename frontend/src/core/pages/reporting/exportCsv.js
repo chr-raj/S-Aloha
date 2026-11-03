@@ -11,7 +11,8 @@ const cell = (v) => {
   if (v == null) return ''
   let s = typeof v === 'number' ? v.toLocaleString('fr-FR', { useGrouping: false }) : String(v)
   if (formula.test(s) && !number.test(s)) s = `'${s}`
-  return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
+  // Retour chariot seul compris : le tableur y voit une fin de ligne (comme l'export d'audit).
+  return /[";\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s
 }
 
 /** Sections [{ title, header, rows }] → texte CSV, une ligne vide entre deux sections. */

@@ -71,7 +71,8 @@ function Editor({ config, record, onSaved }) {
       {isManager && targets.some(p => p.id === record.perimeterId) &&
         <PerimeterSelect perimeters={targets} value={perimeterId} onChange={setPerimeterId} disabled={readOnly} />}
       {/* Un champ porteur de show(record) ne s'affiche que s'il s'applique ; sa valeur repart telle quelle. */}
-      <RecordForm fields={config.fields.filter(x => !x.show || x.show(record))} form={f} onChange={merge} disabled={readOnly || (locked && f.status === record.status)} />
+      <RecordForm fields={config.fields.filter(x => !x.show || x.show(record))} form={f} onChange={merge} isManager={isManager}
+        disabled={readOnly || (locked && f.status === record.status)} />
       <div style={{ display: 'flex', gap: 10 }}>
         {!readOnly && <button className="btn" onClick={save} disabled={!f.title || (force && !reason.trim()) || (locked && f.status === record.status)}>Enregistrer</button>}
         {role === 'Admin' && <button className="btn danger" style={{ marginLeft: 'auto' }} onClick={askRemove}>Supprimer</button>}
@@ -139,7 +140,7 @@ export default function RecordDetail({ config, children, tab }) {
       {practice.map((t, i) => current === 'practice-' + i && <React.Fragment key={i}>{t.render(r, load)}</React.Fragment>)}
       {current === 'links' && <LinkedItems type={config.linkType} id={r.id} hint={config.linkHint} refreshKey={version} />}
       {current === 'comments' && <Comments type={config.linkType} id={r.id} />}
-      {current === 'attachments' && <Attachments type={config.linkType} id={r.id} />}
+      {current === 'attachments' && <Attachments type={config.linkType} id={r.id} perimeterId={r.perimeterId} />}
       {current === 'history' && <History type={config.linkType} id={r.id} labels={labelsOf(config.fields)} refreshKey={version} />}
     </>
   )

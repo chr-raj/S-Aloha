@@ -108,9 +108,12 @@ public class MatchingEngine(AppDbContext db, IConfiguration config)
         {
             ct.ThrowIfCancellationRequested();
             if (asset.Status == DiscoveredAsset.Ignored) continue;
-            // Déjà rapproché : la découverte rafraîchit l'identification technique de son CI.
+            // Déjà rapproché : la découverte rafraîchit l'identification technique de son CI, tant
+            // qu'il reste au périmètre de l'actif (PER-06) ; déplacé ailleurs (PER-07), l'actif
+            // repasse par FindAsync, limité à son périmètre.
             if (asset.Status == DiscoveredAsset.Reconciled && asset.MatchedCiId is { } ciId
-                && await db.ConfigurationItems.FirstOrDefaultAsync(c => c.Id == ciId && c.Status != "Retiré", ct) is { } current)
+                && await db.ConfigurationItems.FirstOrDefaultAsync(
+                    c => c.Id == ciId && c.Status != "Retiré" && c.PerimeterId == asset.PerimeterId, ct) is { } current)
             {
                 if (await ApplyAsync(current, asset) is { } reason) { MarkConflict(asset, reason); conflicts++; }
                 continue;

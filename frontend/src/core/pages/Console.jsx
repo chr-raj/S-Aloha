@@ -104,8 +104,8 @@ export default function Console() {
   // NIS-23 : exigences du référentiel NIS 2 sans texte (Admin).
   const referential = m?.referentialWithoutText > 0
     ? [{ id: 'nis2', reference: 'Référentiel NIS 2', title: `${m.referentialWithoutText} exigence(s) encore sans texte : importer le texte de l’ANSSI`, href: '/settings/nis2' }] : []
-  const chase = L('overdueActions') + L('knownErrorsNoAction') + L('reviewsDue') + L('overdueRequests') + L('projectAlerts') + L('changeFollowUps') + L('incidentFollowUps') + L('idleProblems') + L('unhelpfulArticles') + referential.length
-  const work = myTodo.length + c.myAssignments.length + (c.myProjectAlerts?.length ?? 0) + (c.myChangeFollowUps?.length ?? 0) + (c.myIncidentFollowUps?.length ?? 0) + (c.myUnhelpfulArticles?.length ?? 0) + (c.myFollowUpChecks?.length ?? 0)
+  const chase = L('overdueActions') + L('knownErrorsNoAction') + L('reviewsDue') + L('overdueRequests') + L('projectAlerts') + L('changeFollowUps') + L('incidentFollowUps') + L('idleProblems') + L('unhelpfulArticles') + L('cisToVerify') + referential.length
+  const work = myTodo.length + c.myAssignments.length + (c.myProjectAlerts?.length ?? 0) + (c.myChangeFollowUps?.length ?? 0) + (c.myIncidentFollowUps?.length ?? 0) + (c.myUnhelpfulArticles?.length ?? 0) + (c.myFollowUpChecks?.length ?? 0) + (c.myCisToVerify?.length ?? 0)
   const follow = c.myProblems.length + L('inAnalysisNoRootCause')
 
   const tiles = [
@@ -218,6 +218,9 @@ export default function Console() {
         {/* INC-26 */}
         <List title="Incidents en attente prolongée" tone="amber" rows={m.incidentFollowUps ?? []} onRow={goItem}
           hint="En attente depuis plus de 5 jours ouvrés : relancer l’utilisateur, le fournisseur ou le changement attendu." render={itemRow} />
+        {/* CFG-15 */}
+        <List title="CI à vérifier" tone="amber" rows={m.cisToVerify ?? []} onRow={goItem}
+          hint="CI en service dont la fiche n’a pas été vérifiée depuis 12 mois : relancer le propriétaire, ou la vérifier." render={itemRow} />
       </Group>}
 
       <Group id="travail" title="Mon travail" total={work}>
@@ -241,6 +244,9 @@ export default function Console() {
         {/* CSI-15 */}
         <List title="Contrôles de durabilité" tone="amber" rows={c.myFollowUpChecks ?? []} onRow={goItem}
           hint="Le résultat de l’amélioration tient-il ? Confirmer, ou ouvrir une nouvelle amélioration." render={itemRow} />
+        {/* CFG-15 */}
+        <List title="Mes CI à vérifier" tone="amber" rows={c.myCisToVerify ?? []} onRow={goItem}
+          hint="Fiche non vérifiée depuis 12 mois : la relire, la corriger si besoin, puis attester qu’elle est exacte." render={itemRow} />
       </Group>
 
       <Group id="suivi" title="À suivre" total={follow}>

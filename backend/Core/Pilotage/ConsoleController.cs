@@ -155,6 +155,20 @@ public class ConsoleController(AppDbContext db, PerimeterAccess access) : Contro
             .Where(x => x.OwnerId != null && (x.OwnerType == "Group" ? groups.Contains(x.OwnerId.ToLower()) : x.OwnerId.ToLower() == meKey))
             .Select(x => new Item("improvement", x.Id, x.Reference, x.Title, $"Contrôle de durabilité du {x.FollowUpDate:dd/MM/yyyy}")).ToList();
 
+        // CFG-15 : CI En service non vérifiés depuis 12 mois — les miens (propriétaire), puis ceux des
+        // périmètres gérés. Même calcul que la relance par notification (DatedEvents) : les deux
+        // doivent rester alignés.
+        var verifyLimit = today.AddMonths(-12);
+        var toVerify = (await db.ConfigurationItems.AsNoTracking()
+                .Where(c => c.Status == "En service" && (c.LastVerifiedAt ?? c.CreatedAt) < verifyLimit
+                            && (all || seen.Contains(c.PerimeterId)))
+                .OrderBy(c => c.LastVerifiedAt ?? c.CreatedAt).ToListAsync())
+            .Select(c => (c, Item: new Item("ci", c.Id, c.Reference, c.Title,
+                $"Dernière vérification : {c.LastVerifiedAt ?? c.CreatedAt:dd/MM/yyyy}"))).ToList();
+        var myToVerify = toVerify.Where(x => x.c.OwnerId != null && (x.c.OwnerType == "Group"
+                ? groups.Contains(x.c.OwnerId.ToLower()) : x.c.OwnerId.ToLower() == meKey))
+            .Select(x => x.Item).ToList();
+
         object? management = null;
         // ADR-0014 D4 : le pilotage revient à qui est gestionnaire d'au moins un périmètre.
         if (all || managed.Count > 0)
@@ -300,6 +314,8 @@ public class ConsoleController(AppDbContext db, PerimeterAccess access) : Contro
                                    .Select(x => new Item("incident", x.i.Id, x.i.Reference, x.i.Title, x.Reason!)).ToList(),
                                // PRJ-34 : projets des périmètres gérés hors tolérance ou à jalons en retard.
                                ProjectAlerts = projectAlerts.Where(x => all || managed.Contains(x.Project.PerimeterId)).Select(AlertItem).ToList(),
+                               // CFG-15 : CI à vérifier des périmètres gérés.
+                               CisToVerify = toVerify.Where(x => all || managed.Contains(x.c.PerimeterId)).Select(x => x.Item).ToList(),
                                // INC-24 : incidents en risque ou hors délai des périmètres gérés.
                                SlaIncidents = slaOpen.Where(x => all || managed.Contains(x.i.PerimeterId))
                                    .Select(x => new Item("incident", x.i.Id, x.i.Reference, x.i.Title, x.State)).ToList() };
@@ -307,7 +323,8 @@ public class ConsoleController(AppDbContext db, PerimeterAccess access) : Contro
 
         return Ok(new { Role = role, Username = me, MyProblems = myProblems, MyActions = myActions,
                         MyAssignments = myAssignments, MySlaIncidents = mySla, MyProjectAlerts = myProjectAlerts,
-                        MyChangeFollowUps = myFollowUps, MyIncidentFollowUps = myHeldLong, MyUnhelpfulArticles = myUnhelpful, MyFollowUpChecks = myFollowUpChecks, Management = management });
+                        MyChangeFollowUps = myFollowUps, MyIncidentFollowUps = myHeldLong, MyUnhelpfulArticles = myUnhelpful, MyFollowUpChecks = myFollowUpChecks,
+                        MyCisToVerify = myToVerify, Management = management });
     }
 
     /// <summary>Ligne de console désignant un enregistrement d'un processus.</summary>
