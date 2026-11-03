@@ -68,6 +68,7 @@ jobs:
         with:
           persist-credentials: false
       - run: python3 scripts/check-docs.py
+      - run: python3 scripts/changelog.py
 
   images:
     name: Images Docker

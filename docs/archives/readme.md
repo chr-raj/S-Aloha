@@ -16,7 +16,12 @@
 
 ## Journaux
 
-Sujets traités, un fichier par jour ([format](../protocole-documentation.md#3-journaliser-les-sujets-traités)).
+Depuis le 2026-11-03, **un fichier par sujet** dans [`journaux/`](journaux/), nommé
+`AAAA-MM-JJ-identifiant.md` : le dossier, trié par nom, se lit dans l'ordre chronologique
+([format](../protocole-documentation.md#3-journaliser-les-sujets-traités)). Cet index n'est
+plus complété.
+
+Jusqu'au 2026-11-02, un fichier par jour :
 
 | Date | Journal |
 |---|---|
