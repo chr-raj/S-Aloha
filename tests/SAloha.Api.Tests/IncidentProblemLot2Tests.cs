@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace SAloha.Api.Tests;
 
-/// <summary>Incidents et problèmes, lot 2 : INC-04, INC-05, INC-15, INC-17, PRB-07, PRB-20, PRB-22.</summary>
+/// <summary>Incidents et problèmes, lot 2 : INC-04, INC-05, INC-10, INC-15, INC-17, PRB-07, PRB-20, PRB-22.</summary>
 [Collection("api")]
 public class IncidentProblemLot2Tests(ApiFixture api)
 {
@@ -24,7 +24,7 @@ public class IncidentProblemLot2Tests(ApiFixture api)
     {
         title, description = "d", impact = "Moyen", urgency = "Moyenne", category = "", affectedService = "", status, isMajor = major,
         ownerType, ownerId = owner, ownerDisplayName = owner, channel, callerId = caller, callerDisplayName = caller,
-        escalationReason = escalation, resolution = status == "Résolu" ? "Rétabli" : null, resolutionCode = status == "Résolu" ? "Correctif appliqué" : null
+        escalationReason = escalation, resolution = status is "Résolu" or "Clos" ? "Rétabli" : null, resolutionCode = status is "Résolu" or "Clos" ? "Correctif appliqué" : null
     };
 
     private static object Problem(string title, string? status = null, string? source = null, string? rootCause = null) => new
@@ -43,6 +43,20 @@ public class IncidentProblemLot2Tests(ApiFixture api)
         await using var db = api.Database();
         Assert.True(await db.Notifications.AnyAsync(n => n.TargetType == "incident" && n.TargetId == Id(i)
                                                          && n.RecipientId == "utilisateur.inc05" && n.Event == "Incident résolu"));
+    }
+
+    [Fact]
+    public async Task INC_10_seul_un_gestionnaire_clot_un_incident_resolu()
+    {
+        var user = api.Client("User", "user.inc10");
+        var i = await Json(await user.PostAsJsonAsync("/api/incidents", Incident("Boîte pleine INC-10", owner: "user.inc10")));
+        var url = $"/api/incidents/{Id(i)}";
+        await Json(await user.PutAsJsonAsync(url, Incident("Boîte pleine INC-10", "Résolu", owner: "user.inc10")));
+
+        // Le User résout, mais ne clôt pas : la clôture est une décision du gestionnaire.
+        Assert.Equal(HttpStatusCode.Forbidden, (await user.PutAsJsonAsync(url, Incident("Boîte pleine INC-10", "Clos", owner: "user.inc10"))).StatusCode);
+        var closed = await Json(await api.Client("Manager", "chef.inc10").PutAsJsonAsync(url, Incident("Boîte pleine INC-10", "Clos", owner: "user.inc10")));
+        Assert.Equal("Clos", Str(closed, "status"));
     }
 
     [Fact]

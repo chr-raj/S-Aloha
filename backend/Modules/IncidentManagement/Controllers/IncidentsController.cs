@@ -17,6 +17,8 @@ public class IncidentsController(AppDbContext db) : RecordController<Incident, I
     protected override string LinkType => "incident";
     protected override string[] Statuses => Incident.Statuses;
     protected override IReadOnlyDictionary<string, string[]> Transitions => Incident.Transitions;
+    // INC-10 : la clôture d'un incident résolu est une décision du gestionnaire du périmètre.
+    protected override bool RequiresManager(string status) => status == "Clos";
 
     protected override string? Apply(Incident e, IncidentDto dto, bool creating)
     {
