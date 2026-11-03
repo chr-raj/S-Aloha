@@ -11,16 +11,13 @@ section **Mise à jour** de chaque étape avant de mettre à jour une installati
 
 Le détail au jour le jour (sujets traités, raisons, commits) est dans les
 [journaux](docs/archives/readme.md) ; les notes complètes de chaque version, une fois
-publiée, dans les [releases](https://github.com/chrraj7/S-Aloha/releases).
+publiée, dans les [releases](https://github.com/chrraj7/S-Aloha/releases). Les notes des
+dernières fusions attendent dans [`changelog.d/`](changelog.d/readme.md) d'être versées
+ci-dessous, chaque lundi.
 
 ## Non publié
 
 ### Ajouté
-
-- **Console : CI à vérifier** (CFG-15) : les CI En service dont la fiche n'a pas été vérifiée
-  depuis 12 mois apparaissent dans Mon travail pour leur propriétaire (groupes compris) et
-  dans Relances pour les gestionnaires de leur périmètre, avec la date de la dernière
-  vérification ; compteurs des tuiles inclus.
 
 - **Indicateurs de conformité et de configuration** : écarts NIS 2 traités et évolution du score
   (NIS-30, NIS-31), disponibilité des services sous SLA (SLM-31), délais et abandons des
