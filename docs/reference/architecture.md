@@ -284,7 +284,10 @@ avec l'AGPLv3) ; **Workflows** : actionlint et zizmor (injection par expression,
 dangereux, permissions) sur `.github/workflows/`, outils épinglés par version et empreinte ;
 sur un push sur `main` seulement, une fois les quatre premiers et la Recette verts,
 **Images edge** publie l'état de `main` sur ghcr.io sous le tag `edge`
-([exploitation § Versions et images](exploitation.md#versions-et-images)). Actions épinglées
+([exploitation § Versions et images](exploitation.md#versions-et-images)), une publication à
+la fois et seulement si le commit est encore la tête de `main`. Sur une pull request, une
+nouvelle poussée annule l'exécution en cours ; sur `main`, chaque commit garde la sienne
+jusqu'au bout, si bien que des fusions rapprochées sont toutes contrôlées. Actions épinglées
 par SHA, jeton en lecture seule (écriture des paquets pour le seul job Images edge). CodeQL (C#, JavaScript) et Dependabot
 ([`.github/dependabot.yml`](../../.github/dependabot.yml)) complètent ; les mises à jour
 Dependabot mineures ou correctives se fusionnent d'elles-mêmes une fois la CI au vert
