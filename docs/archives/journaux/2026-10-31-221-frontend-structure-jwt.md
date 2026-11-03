@@ -1,8 +1,6 @@
-# Journal du 2026-10-31
+# 2026-10-31 — Référence de l'interface : la structure ne dit plus que le jeton est en sessionStorage
 
-<sub>[← Archives](readme.md)</sub>
-
-## Référence de l'interface : la structure ne dit plus que le jeton est en sessionStorage
+<sub>[← Archives](../readme.md)</sub>
 
 - **Quoi** : l'arbre § Structure de la référence de l'interface décrit `api.js` comme il est
   depuis l'ADR-0018 : cookie de session `HttpOnly`, en-tête `X-S-Aloha`, retour à `/login` sur
