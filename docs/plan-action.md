@@ -18,7 +18,7 @@
 
 ## Prochaine séance
 
-*Mise à jour le 2026-10-23.* État : 338 règles ✅, une en lot 1
+*Mise à jour le 2026-11-02.* État : 339 règles ✅, une en lot 1
 ([RAG-10](reference/recherche.md), en attente d'un jeu de requêtes réelles), une en lot 3
 (RAG-12, indexation des pièces jointes), aucune en lot 2 ([synthèse](reference/processus/readme.md)) ;
 tous les indicateurs des pratiques sont au tableau de bord. Le lot 3 des pratiques, F7

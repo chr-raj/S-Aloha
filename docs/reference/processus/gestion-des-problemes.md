@@ -98,9 +98,7 @@ stateDiagram-v2
     Resolu : Résolu
 ```
 
-**Aujourd'hui (✅)** : un Manager passe librement d'un statut à l'autre ; seule la
-transition automatique Nouveau → En analyse est codée. **Cible (🔜 PRB-10, lot 1)** :
-seules les transitions ci-dessous sont permises (SOC-05).
+**Transitions (✅ PRB-10)** : seules les transitions ci-dessous sont permises (SOC-05).
 
 | De → Vers | Qui | Conditions (400 sinon) | Effets | Statut |
 |---|---|---|---|---|
