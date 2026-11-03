@@ -296,7 +296,7 @@ stateDiagram-v2
 | En conflit → Rapproché | Manager | Arbitrage sur le CI cible | Mise à jour ou création du CI, comme ci-dessus | ✅ CFG-40 |
 | À rapprocher, En conflit → Ignoré | Manager | Équipement personnel, invité ou hors CMDB | Actif conservé (un nouveau scan ne le recrée pas), plus proposé à la réconciliation | ✅ CFG-40 |
 | Ignoré → À rapprocher | Manager | Exclusion faite par erreur | Le prochain scan recalcule son rapprochement | ✅ CFG-40 |
-| Rapproché (scan suivant) | Système | Le CI rapproché existe et n'est pas retiré | Identification technique du CI tenue à jour ; un CI supprimé rend l'actif au rapprochement | ✅ CFG-41 |
+| Rapproché (scan suivant) | Système | Le CI rapproché existe, n'est pas retiré et reste au périmètre de l'actif | Identification technique du CI tenue à jour ; un CI supprimé, ou déplacé vers un autre périmètre (PER-07), rend l'actif au rapprochement dans son seul périmètre ; le sas ne décrit pas un CI que le gestionnaire ne voit pas (PER-05) | ✅ CFG-41 |
 
 Un actif se supprime du sas (gestionnaire) ; il reviendra au prochain scan s'il est toujours
 présent.
