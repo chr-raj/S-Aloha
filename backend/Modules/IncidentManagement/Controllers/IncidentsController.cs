@@ -126,6 +126,11 @@ public class IncidentsController(AppDbContext db) : RecordController<Incident, I
         if (status == "En attente" && e.Status != "En attente" && e.OnHoldReason is null)
             return $"Choisir le motif de l'attente : {string.Join(", ", Incident.OnHoldReasons)}.";
 
+        // INC-13 (décision du 2026-10-26) : un majeur se déclare sans responsable, mais ne quitte
+        // « Nouveau » qu'avec un gestionnaire pour responsable (vérifié à sa désignation).
+        if (e.IsMajor && e.Status == "Nouveau" && status != "Nouveau" && string.IsNullOrWhiteSpace(e.OwnerId))
+            return "Incident majeur : désigner un gestionnaire pour responsable avant de le sortir de « Nouveau ».";
+
         // INC-06 : la prise en charge suppose un responsable, utilisateur ou groupe.
         if (status == "En cours" && string.IsNullOrWhiteSpace(e.OwnerId))
             return "Désigner un responsable (utilisateur ou groupe) pour prendre l'incident en charge.";
@@ -207,6 +212,12 @@ public class IncidentsController(AppDbContext db) : RecordController<Incident, I
             if (child.IsMajor && !await ItemLinks.IsLinkedToAsync(Db, "incident", child.Id, "problem"))
             {
                 _unresolvedChildren.Add(new(child.Reference, "Incident majeur sans problème relié (INC-15) : le relier à un problème, puis le résoudre."));
+                continue;
+            }
+            // INC-13 : la cascade ne sort pas de « Nouveau » un majeur sans responsable.
+            if (child.IsMajor && child.Status == "Nouveau" && string.IsNullOrWhiteSpace(child.OwnerId))
+            {
+                _unresolvedChildren.Add(new(child.Reference, "Incident majeur sans responsable (INC-13) : désigner un gestionnaire pour responsable, puis le résoudre."));
                 continue;
             }
             if (child.Status == "En attente" && child.OnHoldSince is { } since)

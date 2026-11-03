@@ -202,7 +202,9 @@ public class ConsoleController(AppDbContext db, PerimeterAccess access) : Contro
 
             var majorIncidents = await db.Incidents.AsNoTracking()
                 .Where(i => i.IsMajor && !Incident.Done.Contains(i.Status) && (all || managed.Contains(i.PerimeterId)))
-                .Select(i => new Item("incident", i.Id, i.Reference, i.Title, i.Status)).ToListAsync();
+                // INC-13 : un majeur sans responsable est signalé « Responsable à désigner ».
+                .Select(i => new Item("incident", i.Id, i.Reference, i.Title,
+                    i.OwnerId == null || i.OwnerId == "" ? "Responsable à désigner" : i.Status)).ToListAsync();
 
             // Décisions de gestionnaire en attente : autoriser, approuver, valider.
             var decisions = new List<Item>();

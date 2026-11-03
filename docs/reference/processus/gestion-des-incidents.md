@@ -91,8 +91,8 @@ une résolution.
 | De → Vers | Qui | Conditions (400 sinon) | Effets | Statut |
 |---|---|---|---|---|
 | — → Nouveau | Tous | Titre, impact, urgence | Référence, priorité | ✅ |
-| Nouveau → En cours | Tous | Responsable renseigné (utilisateur ou groupe) | `FirstResponseAt` | ✅ |
-| Nouveau → Résolu | Tous | Résolution et code | `ResolvedAt` ; résolu au premier contact (INC-23) | ✅ INC-23 |
+| Nouveau → En cours | Tous | Responsable renseigné (utilisateur ou groupe) ; incident majeur : un gestionnaire pour responsable (INC-13) | `FirstResponseAt` | ✅ |
+| Nouveau → Résolu | Tous | Résolution et code ; incident majeur : un gestionnaire pour responsable (INC-13) | `ResolvedAt` ; résolu au premier contact (INC-23) | ✅ INC-23 |
 | En cours → En attente | Tous | `OnHoldReason` | Horloge SLA suspendue (INC-22) ; ni risque ni dépassement relevés pendant l'attente | ✅ INC-07 |
 | En attente → En cours | Tous | | `OnHoldReason` effacé, horloge reprise : l'attente, en heures de service, prolonge les échéances | ✅ INC-07, INC-22 |
 | En cours → Résolu | Tous | Résolution et `ResolutionCode` | `ResolvedAt` | ✅ |
@@ -116,10 +116,10 @@ une résolution.
 | INC-10 | **Clôture** par un Manager, ou **automatique** 5 jours ouvrés après la résolution sans réouverture | ✅ (manuelle : Manager du périmètre, un User est refusé en 403) / 🔜 (automatique) | 3 (auto) |
 | INC-11 | **Réouverture** d'un incident Résolu dans les 10 jours ouvrés, avec motif, `ReopenCount` + 1 ; au-delà, ou une fois Clos, un **nouvel** incident est créé et relié | ✅ | 1 |
 | INC-12 | **Incident majeur** : remonte dans la console des gestionnaires tant qu'il n'est ni Résolu ni Clos | ✅ | |
-| INC-13 | Seul un **Manager** déclare ou retire le caractère majeur ; un incident majeur a toujours priorité P1 et un Manager pour responsable | ✅ (responsable nominatif, désigné par un Manager ; il est gestionnaire du périmètre de l'incident — rôle par périmètre, PER-03, lu dans l'annuaire — vérifié quand il est désigné ou que l'incident devient majeur ; annuaire injoignable : désignation acceptée et tracée au journal de l'API) | 1 |
+| INC-13 | Seul un **Manager** déclare ou retire le caractère majeur ; un incident majeur a toujours priorité P1 ; il peut être déclaré sans responsable, mais ne sort de « Nouveau » qu'avec un Manager pour responsable | ✅ (sortie de « Nouveau » sans responsable : 400, et la résolution d'un parent le laisse ouvert, listé dans `unresolvedChildren` (INC-16) ; la console des gestionnaires le signale « Responsable à désigner » ; responsable nominatif, désigné par un Manager ; il est gestionnaire du périmètre de l'incident — rôle par périmètre, PER-03, lu dans l'annuaire — vérifié quand il est désigné ou que l'incident devient majeur ; annuaire injoignable : désignation acceptée et tracée au journal de l'API) | 1 |
 | INC-14 | **Ouvrir un problème lié** depuis l'incident : crée le problème avec les mêmes titre, description, impact, urgence, catégorie et service, dans le périmètre de l'incident (PER-04), puis relie les deux | ✅ | |
 | INC-15 | Un incident **majeur** ne passe à Résolu que relié à un **problème** (existant ou créé, INC-14) : la revue de l'incident majeur s'y conduit | ✅ | 2 |
-| INC-16 | **Incidents enfants** : un incident peut être rattaché à un incident parent (même panne) ; résoudre le parent résout ses enfants avec la même résolution, sauf un enfant **majeur sans problème relié** (INC-15, sans exception), qui reste ouvert : la réponse de la résolution liste les enfants laissés ouverts et la raison (`unresolvedChildren`) ; un majeur peut être rattaché comme enfant | ✅ (rattachement par la référence du parent, par tout rôle qui voit l'incident ; un seul niveau : le parent n'a pas de parent, l'enfant n'a pas d'enfants ; même périmètre ; ni soi-même ni un parent clos ; figé une fois l'incident résolu. À la résolution du parent, ses enfants ouverts, hors majeurs sans problème relié, passent Résolu avec sa résolution et son code, leur attente prend fin ; déclarant et utilisateur affecté notifiés ; encadré « Même panne » sur la fiche) | 3 |
+| INC-16 | **Incidents enfants** : un incident peut être rattaché à un incident parent (même panne) ; résoudre le parent résout ses enfants avec la même résolution, sauf un enfant **majeur sans problème relié** (INC-15, sans exception) ou **majeur Nouveau sans responsable** (INC-13), qui reste ouvert : la réponse de la résolution liste les enfants laissés ouverts et la raison (`unresolvedChildren`) ; un majeur peut être rattaché comme enfant | ✅ (rattachement par la référence du parent, par tout rôle qui voit l'incident ; un seul niveau : le parent n'a pas de parent, l'enfant n'a pas d'enfants ; même périmètre ; ni soi-même ni un parent clos ; figé une fois l'incident résolu. À la résolution du parent, ses enfants ouverts, hors majeurs sans problème relié ou Nouveau sans responsable, passent Résolu avec sa résolution et son code, leur attente prend fin ; déclarant et utilisateur affecté notifiés ; encadré « Même panne » sur la fiche) | 3 |
 | INC-17 | **Escalade fonctionnelle** : changer le responsable vers un autre groupe est tracé (SOC-20) avec un motif (`EscalationReason`, nouveau à chaque escalade) | ✅ | 2 |
 | INC-18 | **Escalade hiérarchique** : un P1, ou un incident dont l'échéance de résolution est dépassée, notifie les gestionnaires (SOC-21) | ✅ (notification des gestionnaires, relevé périodique) | |
 | INC-19 | **Suggestion de connaissance** : l'onglet Informations de la fiche présente les « **Cas similaires** » (articles publiés, problèmes établis, incidents résolus) par la recherche hybride ([RAG-06](../recherche.md)) ; relier en un clic l'élément retenu à l'incident : [RAG-09](../recherche.md) | ✅ (relier : ✅ RAG-09) | 2 |
@@ -168,7 +168,8 @@ résolution par priorité, mesurés en échéances et en état SLA (INC-21, INC-
 
 ## 8. Console et indicateurs
 
-Console ✅ : incidents majeurs en cours (Urgent, gestionnaires) ; SLA en risque ou dépassé
+Console ✅ : incidents majeurs en cours (Urgent, gestionnaires ; « Responsable à désigner »
+tant qu'aucun responsable n'est désigné, INC-13) ; SLA en risque ou dépassé
 (Urgent : les miens, et ceux des périmètres gérés, INC-24) ; mes incidents ouverts (Mon
 travail) ; En attente depuis plus de 5 jours ouvrés (Mon travail du responsable, Relances des
 gestionnaires, INC-26). À venir : incidents non pris en charge depuis plus d'une heure
@@ -203,7 +204,7 @@ gestionnaires, INC-26). À venir : incidents non pris en charge depuis plus d'un
 - **INC-06** — *Étant donné* un incident Nouveau sans responsable, *quand* on le passe à En cours, *alors* 400 ; avec un responsable, `FirstResponseAt` est posé.
 - **INC-07** — *Étant donné* un incident En cours, *quand* on le passe En attente sans motif, *alors* 400.
 - **INC-11** — *Étant donné* un incident Clos, *quand* on le passe à En cours, *alors* 400 « créer un nouvel incident » ; Résolu depuis 2 jours, la réouverture passe et `ReopenCount` vaut 1.
-- **INC-13** — *Étant donné* un User, *quand* il coche « incident majeur », *alors* 403.
+- **INC-13** — *Étant donné* un User, *quand* il coche « incident majeur », *alors* 403. *Étant donné* un incident majeur Nouveau sans responsable, *quand* on le passe à En cours ou Résolu, *alors* 400, et la console des gestionnaires l'affiche « Responsable à désigner » ; avec un gestionnaire pour responsable, la prise en charge passe.
 - **INC-15** — *Étant donné* un incident majeur sans problème relié, *quand* on le passe à Résolu, *alors* 400 qui demande de relier ou d'ouvrir un problème.
 - **INC-16** — *Étant donné* un parent avec trois enfants ouverts, dont un majeur sans problème relié et un majeur relié à un problème, *quand* on résout le parent, *alors* le majeur sans problème reste ouvert et figure dans `unresolvedChildren` avec la raison ; les deux autres passent Résolu.
 - **INC-21** — *Étant donné* un service avec un SLA en vigueur (P2 = 8 h) et des heures de service 24/7, *quand* on crée un incident P2 à 10 h, *alors* `ResolutionDueAt` = 18 h le même jour.
