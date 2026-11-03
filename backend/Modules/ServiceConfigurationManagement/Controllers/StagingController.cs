@@ -33,6 +33,10 @@ public class StagingController(AppDbContext db, PerimeterAccess access, Matching
         [FromQuery] bool unknown = false, [FromQuery] int? ci = null, [FromQuery] int? perimeter = null)
     {
         if (await ManagedAsync() is not { } query) return Forbid();
+        // Un CI rapproché puis déplacé vers un périmètre invisible ne se décrit pas (PER-05).
+        var scope = await access.GetAsync();
+        var global = scope.Global;
+        var visible = scope.Ids.ToList();
         query = query.AsNoTracking();
         if (perimeter is not null) query = query.Where(a => a.PerimeterId == perimeter);
         if (!string.IsNullOrEmpty(status)) query = query.Where(a => a.Status == status);
@@ -54,7 +58,7 @@ public class StagingController(AppDbContext db, PerimeterAccess access, Matching
                 a.SerialNumber, a.Sources, a.InDirectory, a.Status, a.ConfidenceScore, a.MatchRule, a.SuggestedAction, a.ConflictReason,
                 a.FirstSeenAt, a.LastSeenAt,
                 Unknown = !a.InDirectory && a.MatchedCiId == null && DiscoveredAsset.Open.Contains(a.Status),
-                MatchedCi = a.MatchedCi == null ? null : new { a.MatchedCi.Id, a.MatchedCi.Reference, a.MatchedCi.Title }
+                MatchedCi = a.MatchedCi == null || !(global || visible.Contains(a.MatchedCi.PerimeterId)) ? null : new { a.MatchedCi.Id, a.MatchedCi.Reference, a.MatchedCi.Title }
             }).ToListAsync();
         return Ok(rows);
     }
@@ -87,6 +91,7 @@ public class StagingController(AppDbContext db, PerimeterAccess access, Matching
         if (asset is null) return NotFound();
         var match = DiscoveredAsset.Open.Contains(asset.Status) ? await matching.FindAsync(asset) : null;
         var target = match?.Ci ?? asset.MatchedCi;
+        if (target is not null && !(await access.GetAsync()).Sees(target.PerimeterId)) target = null;   // PER-05
         asset.MatchedCi = null;   // décrit par TargetCi
         var software = await db.DiscoveredSoftware.AsNoTracking().Where(s => s.AssetId == id).OrderBy(s => s.Name)
             .Select(s => new { s.Name, s.Version }).ToListAsync();

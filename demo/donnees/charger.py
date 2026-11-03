@@ -281,11 +281,11 @@ def complements(m, u, a, messagerie, erp, mail, bdd, parefeu):
     lier(m, 'ci', imp['id'], impression['reference'])
 
     # --- Incidents ---------------------------------------------------------------
-    def incident(titre, desc, impact, urgence, cat, service, statut=None, resolution=None, **autres):
+    def incident(titre, desc, impact, urgence, cat, service, statut=None, resolution=None, par=None, **autres):
         return creer(u, '/api/incidents', {**URSULA, 'title': titre, 'description': desc,
             'impact': impact, 'urgency': urgence, 'category': cat, 'affectedService': service,
             'isMajor': False, 'resolution': resolution,
-            'resolutionCode': 'Correctif appliqué' if resolution else None, **autres}, statut)
+            'resolutionCode': 'Correctif appliqué' if resolution else None, **autres}, statut, par)
     incident('ERP inaccessible pendant la clôture mensuelle', 'Erreur de connexion à la base.',
              'Élevé', 'Élevée', 'Application', 'ERP Finances', 'Résolu',
              'Redémarrage du service de base de données ; surveillance renforcée.')
@@ -293,7 +293,8 @@ def complements(m, u, a, messagerie, erp, mail, bdd, parefeu):
              'Faible', 'Moyenne', 'Matériel', 'Impression', ['En cours', 'En attente'],
              onHoldReason='Attente fournisseur')
     incident('Boîte aux lettres pleine', 'Réception bloquée pour un utilisateur.',
-             'Faible', 'Faible', 'Messagerie', 'Messagerie', ['Résolu', 'Clos'], 'Archivage et quota relevé.')
+             'Faible', 'Faible', 'Messagerie', 'Messagerie', ['Résolu', 'Clos'], 'Archivage et quota relevé.',
+             par=m)  # INC-10 : la clôture revient au gestionnaire
     inc_erp = incident('Lenteurs ERP en fin de journée', 'Temps de réponse supérieurs à 10 s.',
                        'Moyen', 'Moyenne', 'Application', 'ERP Finances')
 

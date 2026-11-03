@@ -31,7 +31,7 @@ la facturation des services.
 |---|---|---|---|---|
 | Consulter le catalogue et les SLA | ✔ | ✔ | ✔ | ✅ |
 | Créer, modifier un service ou un SLA | ✘ | ✔ | ✔ | ✅ |
-| Enregistrer une revue de SLA | ✘ | ✔ | ✔ | 🔜 SLM-22 |
+| Enregistrer une revue de SLA | ✘ | ✔ | ✔ | ✅ SLM-22 |
 | Supprimer | ✘ | ✘ | ✔ | ✅ |
 
 ## 3. Données
@@ -86,8 +86,8 @@ stateDiagram-v2
     }
 ```
 
-**Aujourd'hui (✅)** : transitions libres, réservées aux gestionnaires. **Cible (🔜 SLM-12,
-lot 1)** : seules les transitions ci-dessous (SOC-05).
+**Transitions (✅ SLM-12)** : réservées aux gestionnaires ; seules les transitions
+ci-dessous sont permises (SOC-05).
 
 | Objet | De → Vers | Qui | Conditions (400 sinon) | Statut |
 |---|---|---|---|---|
@@ -95,8 +95,8 @@ lot 1)** : seules les transitions ci-dessous (SOC-05).
 | Service | En service → Retiré | Manager | Aucun SLA En vigueur ; aucun incident ou demande ouvert sur le service | ✅ SLM-16 |
 | SLA | Brouillon → En vigueur | Manager | Service En service ; délais P1–P4 renseignés et croissants (P1 ≤ P2 ≤ P3 ≤ P4) ; `ValidFrom` ; pas d'autre SLA En vigueur pour le même service et le même client | ✅ |
 | SLA | En vigueur → Expiré | Auto, ou Manager | `ValidTo` passé (auto, relevé périodique ; gestionnaires notifiés) | ✅ SLM-04 |
-| SLA | En vigueur → Brouillon | Manager | Renégociation ; les mesures en cours restent sur la version précédente | 🔜 SLM-12 |
-| SLA | Expiré → … | — | Statut final ; un nouvel accord se crée | 🔜 SLM-12 |
+| SLA | En vigueur → Brouillon | Manager | Renégociation ; les mesures en cours restent sur la version précédente | ✅ SLM-12 |
+| SLA | Expiré → … | — | Statut final ; un nouvel accord se crée | ✅ SLM-12 |
 
 ## 5. Règles de gestion
 

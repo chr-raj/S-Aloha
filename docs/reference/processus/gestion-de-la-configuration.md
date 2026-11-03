@@ -296,7 +296,7 @@ stateDiagram-v2
 | En conflit → Rapproché | Manager | Arbitrage sur le CI cible | Mise à jour ou création du CI, comme ci-dessus | ✅ CFG-40 |
 | À rapprocher, En conflit → Ignoré | Manager | Équipement personnel, invité ou hors CMDB | Actif conservé (un nouveau scan ne le recrée pas), plus proposé à la réconciliation | ✅ CFG-40 |
 | Ignoré → À rapprocher | Manager | Exclusion faite par erreur | Le prochain scan recalcule son rapprochement | ✅ CFG-40 |
-| Rapproché (scan suivant) | Système | Le CI rapproché existe et n'est pas retiré | Identification technique du CI tenue à jour ; un CI supprimé rend l'actif au rapprochement | ✅ CFG-41 |
+| Rapproché (scan suivant) | Système | Le CI rapproché existe, n'est pas retiré et reste au périmètre de l'actif | Identification technique du CI tenue à jour ; un CI supprimé, ou déplacé vers un autre périmètre (PER-07), rend l'actif au rapprochement dans son seul périmètre ; le sas ne décrit pas un CI que le gestionnaire ne voit pas (PER-05) | ✅ CFG-41 |
 
 Un actif se supprime du sas (gestionnaire) ; il reviendra au prochain scan s'il est toujours
 présent.
@@ -415,8 +415,11 @@ d'action](../../plan-action.md#découverte-automatique-et-cmdb-augmentée-f13)) 
 ## 8. Console et indicateurs
 
 Console : mes CI (Mon travail) ✅ ; actifs du sas de staging en conflit ou à rapprocher,
-dont les actifs inconnus (Décisions, gestionnaires, CFG-40) ✅. À venir : CI à vérifier
-(Relances, CFG-15), CI Hors service depuis plus de 7 jours (Relances, gestionnaires, lot 2).
+dont les actifs inconnus (Décisions, gestionnaires, CFG-40) ✅ ; CI à vérifier — CI En service
+non vérifiés depuis 12 mois, même calcul que la relance : ceux dont je suis propriétaire,
+groupes compris (Mon travail), et ceux des périmètres gérés (Relances, gestionnaires), avec la
+date de la dernière vérification (CFG-15) ✅. À venir : CI Hors service depuis plus de 7 jours
+(Relances, gestionnaires, lot 2).
 
 Pages de la pratique : registre des CI ✅, inventaire (CFG-39) ✅, sas de staging et fiche
 d'un actif (gestionnaires, CFG-40) ✅ ; paramétrage de la découverte (tâches, coffre, fins

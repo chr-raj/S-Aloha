@@ -30,7 +30,7 @@ traiter une demande prédéfinie (→ [demandes](gestion-des-demandes.md)).
 |---|---|---|---|---|
 | Créer, modifier, prendre en charge, résoudre | ✔ | ✔ | ✔ | ✅ |
 | Déclarer / retirer le caractère **majeur** | ✘ | ✔ | ✔ | ✅ INC-13 |
-| Clore | ✘ | ✔ | ✔ | 🔜 INC-10 (aujourd'hui : tous) |
+| Clore | ✘ | ✔ | ✔ | ✅ INC-10 (manuelle) |
 | Rouvrir un incident résolu | ✔ | ✔ | ✔ | ✅ (motif et délais INC-11) |
 | Supprimer | ✘ | ✘ | ✔ | ✅ |
 
@@ -85,19 +85,19 @@ stateDiagram-v2
     Resolu : Résolu
 ```
 
-**Aujourd'hui (✅)** : transitions libres ; Résolu et Clos exigent une résolution.
-**Cible (🔜 INC-09, lot 1)** : seules les transitions ci-dessous (SOC-05).
+Seules les transitions ci-dessous sont permises (✅ INC-09, SOC-05) ; Résolu et Clos exigent
+une résolution.
 
 | De → Vers | Qui | Conditions (400 sinon) | Effets | Statut |
 |---|---|---|---|---|
 | — → Nouveau | Tous | Titre, impact, urgence | Référence, priorité | ✅ |
 | Nouveau → En cours | Tous | Responsable renseigné (utilisateur ou groupe) | `FirstResponseAt` | ✅ |
-| Nouveau → Résolu | Tous | Résolution et code | `ResolvedAt` ; résolu au premier contact (INC-23) | ✅ / 🔜 INC-23 (premier contact) |
+| Nouveau → Résolu | Tous | Résolution et code | `ResolvedAt` ; résolu au premier contact (INC-23) | ✅ INC-23 |
 | En cours → En attente | Tous | `OnHoldReason` | Horloge SLA suspendue (INC-22) ; ni risque ni dépassement relevés pendant l'attente | ✅ INC-07 |
 | En attente → En cours | Tous | | `OnHoldReason` effacé, horloge reprise : l'attente, en heures de service, prolonge les échéances | ✅ INC-07, INC-22 |
 | En cours → Résolu | Tous | Résolution et `ResolutionCode` | `ResolvedAt` | ✅ |
 | Résolu → En cours | Tous | Motif ; dans les 10 jours ouvrés suivant la résolution | `ResolvedAt` effacé, `ReopenCount` + 1 | ✅ INC-11 |
-| Résolu → Clos | Manager, ou automatique après 5 jours ouvrés | | `ClosedAt` | ✅ (horodatage) / 🔜 INC-10 |
+| Résolu → Clos | Manager, ou automatique après 5 jours ouvrés | | `ClosedAt` | ✅ INC-10 (Manager du périmètre) / 🔜 INC-10 (automatique) |
 | Clos → … | — | Aucune : un nouvel incident est créé et relié | | ✅ INC-11 |
 
 ## 5. Règles de gestion
@@ -113,16 +113,16 @@ stateDiagram-v2
 | INC-07 | **En attente** exige un motif fermé ; le temps passé En attente ne compte pas dans les délais SLA | ✅ (motif vérifié à l'entrée En attente : un incident déjà en attente avant la règle reste modifiable) | |
 | INC-08 | La résolution exige un **code de résolution** fermé ; *Doublon* exige un lien vers l'incident conservé | ✅ | 1 |
 | INC-09 | **Transitions contraintes** selon le § 4 (SOC-05) | ✅ | 1 |
-| INC-10 | **Clôture** par un Manager, ou **automatique** 5 jours ouvrés après la résolution sans réouverture | 🔜 | 2 (manuelle) / 3 (auto) |
+| INC-10 | **Clôture** par un Manager, ou **automatique** 5 jours ouvrés après la résolution sans réouverture | ✅ (manuelle : Manager du périmètre, un User est refusé en 403) / 🔜 (automatique) | 3 (auto) |
 | INC-11 | **Réouverture** d'un incident Résolu dans les 10 jours ouvrés, avec motif, `ReopenCount` + 1 ; au-delà, ou une fois Clos, un **nouvel** incident est créé et relié | ✅ | 1 |
 | INC-12 | **Incident majeur** : remonte dans la console des gestionnaires tant qu'il n'est ni Résolu ni Clos | ✅ | |
 | INC-13 | Seul un **Manager** déclare ou retire le caractère majeur ; un incident majeur a toujours priorité P1 et un Manager pour responsable | ✅ (responsable nominatif, désigné par un Manager ; il est gestionnaire du périmètre de l'incident — rôle par périmètre, PER-03, lu dans l'annuaire — vérifié quand il est désigné ou que l'incident devient majeur ; annuaire injoignable : désignation acceptée et tracée au journal de l'API) | 1 |
 | INC-14 | **Ouvrir un problème lié** depuis l'incident : crée le problème avec les mêmes titre, description, impact, urgence, catégorie et service, dans le périmètre de l'incident (PER-04), puis relie les deux | ✅ | |
 | INC-15 | Un incident **majeur** ne passe à Résolu que relié à un **problème** (existant ou créé, INC-14) : la revue de l'incident majeur s'y conduit | ✅ | 2 |
-| INC-16 | **Incidents enfants** : un incident peut être rattaché à un incident parent (même panne) ; résoudre le parent résout ses enfants avec la même résolution | ✅ (rattachement par la référence du parent, par tout rôle qui voit l'incident ; un seul niveau : le parent n'a pas de parent, l'enfant n'a pas d'enfants ; même périmètre ; ni soi-même ni un parent clos ; figé une fois l'incident résolu. À la résolution du parent, ses enfants ouverts passent Résolu avec sa résolution et son code, leur attente prend fin ; déclarant et utilisateur affecté notifiés ; encadré « Même panne » sur la fiche) | 3 |
+| INC-16 | **Incidents enfants** : un incident peut être rattaché à un incident parent (même panne) ; résoudre le parent résout ses enfants avec la même résolution, sauf un enfant **majeur sans problème relié** (INC-15, sans exception), qui reste ouvert : la réponse de la résolution liste les enfants laissés ouverts et la raison (`unresolvedChildren`) ; un majeur peut être rattaché comme enfant | ✅ (rattachement par la référence du parent, par tout rôle qui voit l'incident ; un seul niveau : le parent n'a pas de parent, l'enfant n'a pas d'enfants ; même périmètre ; ni soi-même ni un parent clos ; figé une fois l'incident résolu. À la résolution du parent, ses enfants ouverts, hors majeurs sans problème relié, passent Résolu avec sa résolution et son code, leur attente prend fin ; déclarant et utilisateur affecté notifiés ; encadré « Même panne » sur la fiche) | 3 |
 | INC-17 | **Escalade fonctionnelle** : changer le responsable vers un autre groupe est tracé (SOC-20) avec un motif (`EscalationReason`, nouveau à chaque escalade) | ✅ | 2 |
 | INC-18 | **Escalade hiérarchique** : un P1, ou un incident dont l'échéance de résolution est dépassée, notifie les gestionnaires (SOC-21) | ✅ (notification des gestionnaires, relevé périodique) | |
-| INC-19 | **Suggestion de connaissance** : l'onglet Informations de la fiche présente les « **Cas similaires** » (articles publiés, problèmes établis, incidents résolus) par la recherche hybride ([RAG-06](../recherche.md)) ; relier en un clic l'élément retenu à l'incident : [RAG-09](../recherche.md) | ✅ (relier : 🔜 RAG-09) | 2 |
+| INC-19 | **Suggestion de connaissance** : l'onglet Informations de la fiche présente les « **Cas similaires** » (articles publiés, problèmes établis, incidents résolus) par la recherche hybride ([RAG-06](../recherche.md)) ; relier en un clic l'élément retenu à l'incident : [RAG-09](../recherche.md) | ✅ (relier : ✅ RAG-09) | 2 |
 
 ### Incidents de sécurité (cyber) et déclarations réglementaires
 
@@ -141,8 +141,8 @@ alerte précoce sous 24 h ; RGPD : notification sous 72 h) :
 ## 6. Délais, calculs et alertes
 
 Les cibles viennent du **SLA en vigueur** du service affecté
-([niveaux de service](gestion-des-niveaux-de-service.md)) : délai de résolution par
-priorité (aujourd'hui enregistré, pas mesuré).
+([niveaux de service](gestion-des-niveaux-de-service.md)) : délais de prise en charge et de
+résolution par priorité, mesurés en échéances et en état SLA (INC-21, INC-22, INC-24).
 
 | ID | Règle | Statut | Lot |
 |---|---|---|---|
@@ -191,7 +191,7 @@ gestionnaires, INC-26). À venir : incidents non pris en charge depuis plus d'un
 | Route | Policy | Rôle |
 |---|---|---|
 | `GET /api/incidents` (filtres `status`, `q`, `owner`), `GET /api/incidents/{id}` | User | Registre, fiche |
-| `POST /api/incidents`, `PUT /api/incidents/{id}` | User | Création, modification, transitions |
+| `POST /api/incidents`, `PUT /api/incidents/{id}` | User | Création, modification, transitions ; la résolution d'un parent renvoie `unresolvedChildren: [{ reference, reason }]` quand des enfants restent ouverts (INC-16) |
 | `DELETE /api/incidents/{id}` | Admin | Suppression (liens et déclarations réglementaires compris) |
 | `GET /api/incidents/{id}/family`, `PUT /api/incidents/{id}/parent` (`parentReference`, vide : détaché) | User | Parent et enfants d'un incident, rattachement (INC-16) |
 | `POST /api/incidents/{id}/qualification` (`nis2Important`, `nis2Reason`, `personalDataBreach`, `personalDataBreachReason`, `awareAt`) | Manager | Qualification réglementaire d'un incident cyber : crée les déclarations des régimes retenus, propose l'incident majeur (INC-41, INC-42, INC-44) |
@@ -205,4 +205,5 @@ gestionnaires, INC-26). À venir : incidents non pris en charge depuis plus d'un
 - **INC-11** — *Étant donné* un incident Clos, *quand* on le passe à En cours, *alors* 400 « créer un nouvel incident » ; Résolu depuis 2 jours, la réouverture passe et `ReopenCount` vaut 1.
 - **INC-13** — *Étant donné* un User, *quand* il coche « incident majeur », *alors* 403.
 - **INC-15** — *Étant donné* un incident majeur sans problème relié, *quand* on le passe à Résolu, *alors* 400 qui demande de relier ou d'ouvrir un problème.
+- **INC-16** — *Étant donné* un parent avec trois enfants ouverts, dont un majeur sans problème relié et un majeur relié à un problème, *quand* on résout le parent, *alors* le majeur sans problème reste ouvert et figure dans `unresolvedChildren` avec la raison ; les deux autres passent Résolu.
 - **INC-21** — *Étant donné* un service avec un SLA en vigueur (P2 = 8 h) et des heures de service 24/7, *quand* on crée un incident P2 à 10 h, *alors* `ResolutionDueAt` = 18 h le même jour.

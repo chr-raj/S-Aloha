@@ -430,4 +430,30 @@ public class DiscoveryTests(ApiFixture api)
         Assert.Contains("port 5432", Str(db, "reason"));
         Assert.Contains("port 6379", Str(db, "reason"));
     }
+    [Fact]
+    public async Task PER_07_un_actif_rapproche_ne_suit_pas_son_CI_deplace_vers_un_autre_perimetre()
+    {
+        var (a, admin, manager) = await Perimeter("per07d");
+        var b = Id(await Json(await admin.PostAsJsonAsync("/api/admin/perimeters", new { name = "Site per07d-b" })));
+        var ci = await Json(await admin.PostAsJsonAsync("/api/configuration-items", Server("srv-per07d", a, "SN-PER07D", "10.87.0.9")));
+        FakeCollector.Observations["10.87.0.0/24"] = [new("IpSweep", IpAddress: "10.87.0.9", SerialNumber: "SN-PER07D", Type: "Serveur")];
+        var job = Id(await Json(await manager.PostAsJsonAsync("/api/discovery/jobs",
+            new { name = "Balayage per07d", scanType = "IpSweep", targetRange = "10.87.0.0/24", perimeterId = a })));
+        await RunAndWait(manager, job);
+        var asset = (await Staged(manager, a)).Single();
+        Assert.Equal(DiscoveredAsset.Reconciled, Str(asset, "status"));
+
+        // Le CI passe au périmètre B, que le gestionnaire de A ne voit pas.
+        await Json(await admin.PutAsJsonAsync($"/api/configuration-items/{Id(ci)}", Server("srv-per07d", b, "SN-PER07D", "10.87.0.9")));
+        Assert.Equal(HttpStatusCode.NotFound, (await manager.GetAsync($"/api/configuration-items/{Id(ci)}")).StatusCode);
+        Assert.Equal(JsonValueKind.Null, (await Staged(manager, a)).Single().GetProperty("matchedCi").ValueKind);
+        Assert.Equal(JsonValueKind.Null, (await Json(await manager.GetAsync($"/api/discovery/staging/{Id(asset)}"))).GetProperty("targetCi").ValueKind);
+
+        // Une nouvelle découverte de A ne réécrit pas le CI de B.
+        FakeCollector.Observations["10.87.0.0/24"] = [new("IpSweep", IpAddress: "10.87.0.77", SerialNumber: "SN-PER07D", Os: "OS-ECRIT-DEPUIS-A", Type: "Serveur")];
+        await RunAndWait(manager, job);
+        var moved = await Json(await admin.GetAsync($"/api/configuration-items/{Id(ci)}"));
+        Assert.Equal((b, "10.87.0.9"), (moved.GetProperty("perimeterId").GetInt32(), Str(moved, "ipAddress")));
+        Assert.NotEqual(DiscoveredAsset.Reconciled, Str((await Staged(manager, a)).Single(), "status"));
+    }
 }

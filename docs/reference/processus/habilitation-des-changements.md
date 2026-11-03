@@ -82,8 +82,8 @@ stateDiagram-v2
     MisEnOeuvre : Mis en œuvre
 ```
 
-**Aujourd'hui (✅)** : les conditions de statut ci-dessous sont tenues ; les autres
-transitions sont libres. **Cible (🔜 CHG-11, lot 1)** : seules ces transitions (SOC-05).
+**Transitions (✅ CHG-11)** : seules les transitions ci-dessous sont permises (SOC-05), avec
+les conditions de statut.
 
 | De → Vers | Qui | Conditions (400 sinon) | Effets | Statut |
 |---|---|---|---|---|
@@ -96,7 +96,7 @@ transitions sont libres. **Cible (🔜 CHG-11, lot 1)** : seules ces transitions
 | Autorisé, Planifié → Évalué | Auto | Modification d'un champ d'évaluation par un User, ou par un gestionnaire dans les cas de CHG-07 (demandeur, CAB, conflit) | Autorisation effacée | ✅ |
 | Planifié → Mis en œuvre | Responsable, Manager | Début réel | `ActualStart` | ✅ CHG-14 |
 | Mis en œuvre → Clos | Responsable, Manager | Résultat ; fin réelle ; revue si requise (CHG-15) | `ClosedAt` | ✅ |
-| Rejeté, Clos → … | — | Statuts finaux | | 🔜 CHG-11 |
+| Rejeté, Clos → … | — | Statuts finaux | | ✅ CHG-11 |
 
 ## 5. Règles de gestion
 

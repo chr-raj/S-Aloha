@@ -18,7 +18,7 @@
 
 ## Prochaine séance
 
-*Mise à jour le 2026-10-23.* État : 338 règles ✅, une en lot 1
+*Mise à jour le 2026-11-02.* État : 339 règles ✅, une en lot 1
 ([RAG-10](reference/recherche.md), en attente d'un jeu de requêtes réelles), une en lot 3
 (RAG-12, indexation des pièces jointes), aucune en lot 2 ([synthèse](reference/processus/readme.md)) ;
 tous les indicateurs des pratiques sont au tableau de bord. Le lot 3 des pratiques, F7
@@ -90,7 +90,7 @@ Détail : [sécurité § Points de durcissement](reference/securite.md#points-de
 | S3 | **CORS** restreint ([#122](https://github.com/chrraj7/S-Aloha/issues/122)) ; API et Swagger non publiés hors de nginx | code |
 | ~~S7~~ | ~~Refus de démarrer hors développement avec les valeurs d'exemple~~ — soldé le 2026-10-16 (`SampleSecrets` ; démonstration : `Security:AllowSampleSecrets`) ([audit du 2026-10-16](archives/audit-code-2026-10-16.md) § 1) | code |
 | ~~S8~~ | ~~Audience du jeton JWT~~ — soldé le 2026-10-16 (`Jwt:Audience`, émise et vérifiée) ([audit du 2026-10-16](archives/audit-code-2026-10-16.md) § 2) | code |
-| O1 | Démarrage : sondes `/health/live` et `/health/ready` ([#121](https://github.com/chrraj7/S-Aloha/issues/121)) ; rattrapage des échéances SLA en tâche de fond et migrations pilotables (`Database:MigrateOnStartup`, option `--migrate`) faits le 2026-10-21 ([audit du 2026-10-16](archives/audit-code-2026-10-16.md) § 4) | code |
+| ~~O1~~ | ~~Démarrage : sondes, rattrapage SLA en tâche de fond, migrations pilotables~~ — soldé le 2026-10-29 : sondes `/health/live` et `/health/ready` ([#121](https://github.com/chrraj7/S-Aloha/issues/121)) ; rattrapage des échéances SLA en tâche de fond et migrations pilotables (`Database:MigrateOnStartup`, option `--migrate`) faits le 2026-10-21 ([audit du 2026-10-16](archives/audit-code-2026-10-16.md) § 4) | code |
 
 ## 6. Qualité
 
@@ -114,7 +114,7 @@ restantes sont spécifiées règle par règle dans [`reference/processus/`](refe
 |---|---|---|---|
 | ~~F2~~ | Incidents, Problèmes | ~~Service et catégorie tirés du catalogue et d'un référentiel~~ — soldé le 2026-10-19 | [SOC-27](reference/regles-metier.md#9-traçabilité-commentaires-administration), [SLM-10](reference/processus/gestion-des-niveaux-de-service.md) |
 | ~~F3~~ | Demandes | ~~Tâches d'exécution créées depuis le modèle~~ — soldé le 2026-10-23 (REQ-24, REQ-25) | [REQ-24, REQ-25](reference/processus/gestion-des-demandes.md) |
-| F5 | Configuration | Import en masse et attributs par type de CI faits le 2026-10-23 (rattachement CI ↔ service fait le 2026-10-13, service signalé « dégradé » le 2026-10-21) ; restent exactitude de la CMDB ([#124](https://github.com/chrraj7/S-Aloha/issues/124)), CI à vérifier dans la console ([#125](https://github.com/chrraj7/S-Aloha/issues/125)) | [CFG-16, CFG-30](reference/processus/gestion-de-la-configuration.md) |
+| F5 | Configuration | Import en masse et attributs par type de CI faits le 2026-10-23 (rattachement CI ↔ service fait le 2026-10-13, service signalé « dégradé » le 2026-10-21) ; CI à vérifier dans la console fait le 2026-11-03 ([#125](https://github.com/chrraj7/S-Aloha/issues/125)) ; reste exactitude de la CMDB ([#124](https://github.com/chrraj7/S-Aloha/issues/124)) | [CFG-16, CFG-30](reference/processus/gestion-de-la-configuration.md) |
 | ~~F7~~ | Tous | ~~Pièces jointes, notifications par courriel~~ — soldé le 2026-10-23 (indexation des pièces jointes à arbitrer : RAG-12) | [SOC-22, SOC-25](reference/regles-metier.md#8-notifications) |
 | ~~F8~~ | Connaissances, Incidents | ~~Suggestion d'articles et cas similaires dès la saisie, relier en un clic~~ — soldé le 2026-10-21 | [INC-19](reference/processus/gestion-des-incidents.md), [RAG-09, RAG-11](reference/recherche.md) |
 | ~~F11~~ | Incidents, sécurité | **Déclarations réglementaires** des incidents cyber (NIS 2 : alerte précoce 24 h, notification 72 h, rapport final ; RGPD : 72 h) : lot 2 fait le 2026-10-21 (qualification de l'incident, déclarations, échéances, console, notifications, respect des délais)  ; modèle de contenu par régime et indicateurs faits le 2026-10-23 — soldé | [DRG-08, DRG-21, DRG-22](reference/processus/declarations-reglementaires.md) |

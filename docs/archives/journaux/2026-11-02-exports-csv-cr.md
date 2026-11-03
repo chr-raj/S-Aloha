@@ -1,0 +1,16 @@
+# 2026-11-02 — Exports CSV de l'interface : retour chariot entre guillemets (REP-08)
+
+<sub>[← Archives](../readme.md)</sub>
+
+- **Quoi** : une cellule des exports de l'interface (reporting, inventaire, synthèse de
+  conformité) qui contient un retour chariot est mise entre guillemets, comme celle qui
+  contient « ; », un guillemet ou un saut de ligne ; l'export du journal d'audit le faisait
+  déjà. Un test de l'interface, qui échoue sans la correction ; fichier produit ouvert dans
+  LibreOffice : une seule cellule, lue comme du texte.
+- **Pourquoi** : le tableur lit un retour chariot seul comme une fin de ligne ; la cellule
+  doit rester entière, et la neutralisation des formules (ADM-31, REP-08) s'appliquer à elle
+  seule.
+- **Fichiers** : `frontend/src/core/pages/reporting/exportCsv.js`,
+  `frontend/src/core/pages/reporting/exportCsv.test.js`
+- **Documentation** : reporting (REP-08), CHANGELOG (§ Sécurité)
+- **Commit** : REP-08 (exports CSV)
