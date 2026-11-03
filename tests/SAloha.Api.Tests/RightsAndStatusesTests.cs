@@ -198,6 +198,25 @@ public class RightsAndStatusesTests(ApiFixture api)
     }
 
     [Fact]
+    public async Task CFG_12_creation_au_statut_retire_reservee_au_gestionnaire()
+    {
+        var u = api.Client("User");
+        var m = api.Client("Manager");
+        object Dto(string title) => new
+        {
+            title, ciType = "Serveur", environment = "Production",
+            ownerType = "User", ownerId = "hery.rakoto", status = "Retiré"
+        };
+
+        // Le statut choisi à la création n'ouvre pas ce que la transition ferme (403).
+        var res = await u.PostAsJsonAsync("/api/configuration-items", Dto("srv-cfg-12-creation-user"));
+        Assert.Equal(HttpStatusCode.Forbidden, res.StatusCode);
+
+        var created = await Json(await m.PostAsJsonAsync("/api/configuration-items", Dto("srv-cfg-12-creation-mgr")));
+        Assert.Equal("Retiré", created.GetProperty("status").GetString());
+    }
+
+    [Fact]
     public async Task CFG_13_retrait_ci_refuse_si_incident_ou_changement_ouvert()
     {
         var m = api.Client("Manager");
