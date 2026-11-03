@@ -1,0 +1,12 @@
+# 2026-10-31 — Référence de l'interface : la structure ne dit plus que le jeton est en sessionStorage
+
+<sub>[← Archives](../readme.md)</sub>
+
+- **Quoi** : l'arbre § Structure de la référence de l'interface décrit `api.js` comme il est
+  depuis l'ADR-0018 : cookie de session `HttpOnly`, en-tête `X-S-Aloha`, retour à `/login` sur
+  401. La page ne se contredit plus avec son § Session côté navigateur.
+- **Pourquoi** : la ligne annonçait encore un JWT en `sessionStorage`, ce qui pouvait faire
+  chercher le jeton côté script ou signaler à tort une faille.
+- **Fichiers** : aucun fichier de code
+- **Documentation** : référence de l'interface (§ Structure)
+- **Commit** : correction de #221
