@@ -11,3 +11,4 @@
 - **Fichiers** : `.github/workflows/garde-fous.yml`
 - **Documentation** : aucune autre (comportement attendu inchangé)
 - **Commit** : classe de risque non annulée
+
