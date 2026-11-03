@@ -99,7 +99,7 @@ Détail : [sécurité § Points de durcissement](reference/securite.md#points-de
 | Q1 | **Tests** : socle en place (API : xUnit + Testcontainers ; frontend : Vitest), B1–B3 et M1, M2, M4–M6 couverts ; étendre aux scénarios R1–R6 (R6 couvert le 2026-10-16) | code |
 | Q2 | **CI** : build backend et frontend, `python3 scripts/check-docs.py` | code |
 | Q4 | Créer les issues GitHub des sections 1 à 7 et les lier ici ; premières **good first issue** ouvertes le 2026-10-19 pour la communauté : [#120](https://github.com/chrraj7/S-Aloha/issues/120) à [#126](https://github.com/chrraj7/S-Aloha/issues/126) | action |
-| Q5 | Mesure de la couverture de tests (coverlet) publiée en CI, sans seuil bloquant ; `dotnet format` ([audit du 2026-10-16](archives/audit-code-2026-10-16.md) § 8) ; couverture : [#123](https://github.com/chrraj7/S-Aloha/issues/123) | code |
+| Q5 | ~~Mesure de la couverture de tests (coverlet) publiée en CI, sans seuil bloquant~~ — fait le 2026-11-03 ([#123](https://github.com/chrraj7/S-Aloha/issues/123), [architecture § 9](reference/architecture.md#9-tests)) ; reste `dotnet format` ([audit du 2026-10-16](archives/audit-code-2026-10-16.md) § 8) | code |
 | ~~Q6~~ | ~~`.dockerignore` pour `backend` et `frontend`~~ — soldé le 2026-10-26 ([audit du 2026-10-16](archives/audit-code-2026-10-16.md) § 9, [#120](https://github.com/chrraj7/S-Aloha/issues/120)) : contexte de construction limité aux sources ([exploitation](reference/exploitation.md)) | code |
 
 ## 7. Feuille de route fonctionnelle
