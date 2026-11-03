@@ -250,12 +250,18 @@ Détails (registre des modules, thème, design) : [frontend.md](frontend.md).
   F9 et F10 : article retouché, changement modifié) ; mise à niveau du schéma — 2 tests
   (`MigrationTests` : base créée par `EnsureCreated` avant et après les modules ITIL 4) ; et 2 tests
   d'interface (`RecordForm.test.jsx` : conversions formulaire ↔ API).
+- **Taux de couverture de l'API** (Q5) : mesuré à chaque exécution du job **API** de la CI
+  (coverlet, `--collect:"XPlat Code Coverage"`), sans seuil bloquant. Les taux de lignes et de
+  branches se lisent dans le résumé du job ; le rapport détaillé (HTML, par classe) est publié
+  en artefact `couverture-api`, gardé 14 jours. Les migrations, générées, en sont exclues. En
+  local : la même commande `dotnet test` avec `--collect:"XPlat Code Coverage"`, puis
+  ReportGenerator sur `coverage.cobertura.xml`.
 
 ### Intégration continue
 
 [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) rejoue ces contrôles à chaque
 push sur `main` et sur chaque pull request, en onze jobs : **API** (tests ci-dessus et
-`dotnet list package --vulnerable`), **Interface** (`npm ci`, tests, build,
+`dotnet list package --vulnerable`, couverture publiée sans seuil), **Interface** (`npm ci`, tests, build,
 `npm audit --audit-level=high`), **Documentation** (`scripts/check-docs.py`) et
 **Images Docker** (build des deux images, sans publication), **DCO** (chaque commit porte le
 `Signed-off-by` de son auteur, bots exceptés ;

@@ -33,9 +33,24 @@ jobs:
           # L'API et le projet de tests ciblent net10.0 (LTS).
           dotnet-version: 10.0.x
       - name: Tests
-        run: dotnet test tests/SAloha.Api.Tests
+        run: dotnet test tests/SAloha.Api.Tests --collect:"XPlat Code Coverage" --results-directory couverture
         env:
           TESTCONTAINERS_RYUK_DISABLED: "true"
+      # Q5 : la couverture se mesure et se montre, sans seuil qui bloque une PR. Les
+      # migrations, générées, sont exclues : elles portaient le taux de lignes à 99 %.
+      - name: Couverture (résumé et rapport)
+        if: ${{ !cancelled() }}
+        run: |
+          dotnet tool install --tool-path .outils dotnet-reportgenerator-globaltool --version 5.5.12
+          .outils/reportgenerator "-reports:couverture/**/coverage.cobertura.xml" -targetdir:couverture/rapport \
+            "-reporttypes:Html;MarkdownSummaryGithub" "-filefilters:-*/Migrations/*"
+          cat couverture/rapport/SummaryGithub.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: ${{ !cancelled() }}
+        with:
+          name: couverture-api
+          path: couverture/rapport
+          retention-days: 14
       - name: Dépendances vulnérables
         run: |
           dotnet list backend/SAloha.Api.csproj package --vulnerable --include-transitive | tee vuln.txt
