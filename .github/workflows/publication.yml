@@ -20,7 +20,10 @@ jobs:
         with:
           persist-credentials: false
       - name: Connexion au registre
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+        env:
+          JETON: ${{ secrets.GITHUB_TOKEN }}
+          ACTEUR: ${{ github.actor }}
+        run: echo "$JETON" | docker login ghcr.io -u "$ACTEUR" --password-stdin
       - name: Construction et envoi
         env:
           VERSION: ${{ github.ref_name }}

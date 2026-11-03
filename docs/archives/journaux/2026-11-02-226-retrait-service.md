@@ -1,8 +1,6 @@
-# Journal du 2026-11-02
+# 2026-11-02 — Retrait d'un service sous condition (SLM-16)
 
-<sub>[← Archives](readme.md)</sub>
-
-## Retrait d'un service sous condition (SLM-16)
+<sub>[← Archives](../readme.md)</sub>
 
 - **Quoi** : le passage d'un service à Retiré est refusé (400, références en cause citées)
   tant qu'il porte un SLA En vigueur, un incident ouvert (ni Résolu ni Clos) ou une demande
