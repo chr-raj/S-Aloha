@@ -1,8 +1,6 @@
-# Journal du 2026-10-31
+# 2026-10-31 — Fiches : revue d'article, durabilité, vérification de CI et pièces jointes suivent le rôle sur le périmètre (PER-06)
 
-<sub>[← Archives](readme.md)</sub>
-
-## Fiches : revue d'article, durabilité, vérification de CI et pièces jointes suivent le rôle sur le périmètre (PER-06)
+<sub>[← Archives](../readme.md)</sub>
 
 - **Quoi** : un calcul partagé, `useManagerOn(perimeterId)` (rôle sur le périmètre de
   l'enregistrement ; rôle de l'annuaire en repli tant que la liste n'est pas chargée), commande

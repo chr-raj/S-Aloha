@@ -11,7 +11,9 @@ section **Mise à jour** de chaque étape avant de mettre à jour une installati
 
 Le détail au jour le jour (sujets traités, raisons, commits) est dans les
 [journaux](docs/archives/readme.md) ; les notes complètes de chaque version, une fois
-publiée, dans les [releases](https://github.com/chrraj7/S-Aloha/releases).
+publiée, dans les [releases](https://github.com/chrraj7/S-Aloha/releases). Les notes des
+dernières fusions attendent dans [`changelog.d/`](changelog.d/readme.md) d'être versées
+ci-dessous, chaque lundi.
 
 ## Non publié
 
@@ -216,10 +218,6 @@ publiée, dans les [releases](https://github.com/chrraj7/S-Aloha/releases).
   « Qualifier » suivait le rôle de l'annuaire ; il suit désormais le rôle sur le périmètre de
   l'incident, comme l'API — un gestionnaire du périmètre le voit, un Manager de l'annuaire
   simple utilisateur de ce périmètre ne le voit plus.
-- **Décisions de gestionnaire sur les fiches** (PER-06) : la revue et la demande d'archivage
-  d'un article publié, la soumission à publication, le contrôle de durabilité d'une amélioration,
-  la vérification d'un CI et le retrait de la pièce jointe d'un autre suivaient le rôle de
-  l'annuaire ; ils suivent désormais, comme l'API, le rôle sur le périmètre de l'enregistrement.
 - **Échéance d'une demande du catalogue** (REQ-22) : enregistrer la fiche d'une demande issue
   d'un modèle à délai cible était refusé à un User (« Seul un gestionnaire modifie
   l'échéance… »), et ramenait l'échéance à minuit pour un gestionnaire ; le même jour renvoyé
