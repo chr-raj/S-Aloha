@@ -44,7 +44,8 @@ Le cycle : un constat daté part en **archives** ; ce qu'il révèle de durable 
 | un bug, une faille | [GitHub Issues](https://github.com/chrraj7/S-Aloha/issues) ([ADR-0001](decisions/adr-0001-github-issues-source-de-verite.md)) |
 | un chantier qui demande une intention | [`plan-action.md`](plan-action.md) |
 | un audit, un état des lieux | `archives/`, daté dans le nom du fichier |
-| un sujet traité aujourd'hui | le journal du jour, `archives/journal-AAAA-MM-JJ.md` ([protocole](protocole-documentation.md)) |
+| un sujet traité aujourd'hui | son entrée de journal, `archives/journaux/AAAA-MM-JJ-identifiant.md` ([protocole](protocole-documentation.md#3-journaliser-les-sujets-traités)) |
+| un changement notable pour qui installe | une note dans [`changelog.d/`](../changelog.d/readme.md) |
 | une décision actée et structurante | un ADR dans [`decisions/`](decisions/readme.md) |
 | un fait durable sur le fonctionnement | le document de référence concerné, **dans le même commit que le code** ([ADR-0002](decisions/adr-0002-documentation-dans-le-depot.md)) |
 

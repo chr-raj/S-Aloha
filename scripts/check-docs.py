@@ -24,7 +24,7 @@ import sys
 REPO = pathlib.Path(__file__).resolve().parents[1]
 
 # Racines qui désignent un chemin du dépôt.
-ROOTS = ('backend/', 'frontend/', 'docs/', 'scripts/', '.github/')
+ROOTS = ('backend/', 'frontend/', 'docs/', 'scripts/', '.github/', 'changelog.d/')
 BARE = ('docker-compose.yml', 'README.md')
 
 # Jetons génériques : gabarits, globs, exemples.
@@ -32,6 +32,9 @@ PLACEHOLDER = re.compile(r'[<>*{}$]|\.\.\.|YYYY|000X|:\w+$')
 
 PATH_TOKEN = re.compile(r'(?<![\w./-])((?:\.?[\w.-]+/)+[\w.-]+)')
 MD_LINK = re.compile(r'\]\(([^)]+)\)')
+
+# Une entrée de journal par sujet (protocole § 3).
+JOURNAL = re.compile(r'^\d{4}-\d{2}-\d{2}-[a-z0-9][a-z0-9-]*\.md$')
 
 # Références délibérées à ce qui N'EXISTE PLUS — la phrase dit justement que le
 # chemin a disparu (ADR et constats racontent l'arborescence d'avant).
@@ -90,6 +93,9 @@ def main(argv):
                 n_anchors += 1
                 if resolved in texts and slug(frag) not in headings(texts[resolved]):
                     problems.append(f'{f}  ancre inexistante   → {target}')
+
+        if '/archives/journaux/' in f and not JOURNAL.match(posixpath.basename(f)):
+            problems.append(f'{f}  nom attendu         → AAAA-MM-JJ-identifiant.md')
 
         # Les archives sont des relevés datés : elles citent forcément des fichiers
         # déplacés ou supprimés depuis. Leurs liens markdown restent vérifiés.

@@ -14,7 +14,7 @@ permissions:
 jobs:
   fusion:
     name: Fusion automatique
-    if: github.event.pull_request.user.login == 'dependabot[bot]' && github.actor == 'dependabot[bot]'
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -34,6 +34,14 @@ jobs:
               sys.exit(f"Version majeure ({majeures[0][0]} → {majeures[0][1]}) : fusion à la main.")
           print(f"{len(paires)} mise(s) à jour mineure(s) ou corrective(s).")
           PY
+      - name: PR modifiée par Dependabot seul
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.pull_request.html_url }}
+        run: |
+          # github.actor se falsifie (zizmor, bot-conditions) : on lit les auteurs des commits.
+          autres=$(gh pr view "$PR" --json commits --jq '[.commits[].authors[].login] | map(select(. != "dependabot[bot]")) | length')
+          if [ "$autres" != 0 ]; then echo "PR modifiée par quelqu'un d'autre : fusion à la main."; exit 1; fi
       - name: Programmer la fusion
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,8 +1,6 @@
-# Journal du 2026-10-30
+# 2026-10-30 — Résolution en cascade : les enfants majeurs sans problème restent ouverts (INC-15, INC-16)
 
-<sub>[← Archives](readme.md)</sub>
-
-## Résolution en cascade : les enfants majeurs sans problème restent ouverts (INC-15, INC-16)
+<sub>[← Archives](../readme.md)</sub>
 
 - **Quoi** : à la résolution d'un parent, un enfant majeur sans problème relié n'est plus
   résolu avec lui ; la réponse de la résolution porte un champ ajouté à la vue de l'incident,
