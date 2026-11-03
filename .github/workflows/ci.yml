@@ -270,9 +270,9 @@ jobs:
           exit $fail
 
   hygiene:
-    # Avertissements seulement pour l'instant (ne bloque pas la fusion) : trailers autres
+    # Bloquant depuis le 2026-11-03 (--strict, contrôle exigé sur main) : trailers autres
     # que Signed-off-by, termes réservés (liste dans le secret HYGIENE_TERMES, jamais
-    # affichée). scripts/check-hygiene.py ; --strict le rendra bloquant.
+    # affichée). scripts/check-hygiene.py.
     name: Hygiène
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
@@ -287,4 +287,4 @@ jobs:
           BASE: ${{ github.event.pull_request.base.sha }}
           HEAD: ${{ github.event.pull_request.head.sha }}
           HYGIENE_TERMES: ${{ secrets.HYGIENE_TERMES }}
-        run: python3 scripts/check-hygiene.py "$BASE" "$HEAD"
+        run: python3 scripts/check-hygiene.py "$BASE" "$HEAD" --strict

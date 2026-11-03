@@ -88,7 +88,7 @@ mainteneur ([`scripts/garde-fous.py`](scripts/garde-fous.py)). Une refactorisati
 effet observable le dit dans sa description : le mainteneur pose alors
 `preuve-non-requise`.
 
-Le job **Hygiène** signale (sans bloquer, pour l'instant) tout trailer autre que
+Le job **Hygiène** refuse (contrôle exigé pour fusionner) tout trailer autre que
 `Signed-off-by` — ligne de co-auteur, lien de session d'un outil — et les termes réservés
 du projet (noms et adresses internes que le dépôt public ne doit pas contenir) :
 [`scripts/check-hygiene.py`](scripts/check-hygiene.py).

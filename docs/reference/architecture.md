@@ -269,8 +269,7 @@ push sur `main` et sur chaque pull request, en onze jobs : **API** (tests ci-des
 arrivés par la fusion, pour repérer un squash dont le message a perdu la signature) et, sur
 une pull request seulement, **Hygiène**
 (`scripts/check-hygiene.py` : trailers autres que `Signed-off-by` et termes réservés, lus dans
-le secret `HYGIENE_TERMES` ; avertissements seulement pour l'instant, non exigé pour
-fusionner) ; **Recette** : la pile de démonstration construite depuis les sources sur une base
+le secret `HYGIENE_TERMES` ; bloquant et exigé pour fusionner depuis le 2026-11-03) ; **Recette** : la pile de démonstration construite depuis les sources sur une base
 vierge (annuaire Samba AD, API, interface, sans le service d'embeddings), les données
 d'exemple chargées par l'API (`demo/donnees/charger.py`), puis
 [`scripts/recette.py`](../../scripts/recette.py) par l'interface : connexion des trois rôles,
