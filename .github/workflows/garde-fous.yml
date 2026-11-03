@@ -11,13 +11,15 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: garde-fous-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
-
+# Concurrence par job : une étiquette posée juste après l'ouverture ne doit annuler que
+# l'ancien contrôle Garde-fous, jamais la classe de risque (qui ne tourne pas sur
+# `labeled` et serait perdue : #243, 2026-11-03).
 jobs:
   garde-fous:
     name: Garde-fous
+    concurrency:
+      group: garde-fous-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -37,6 +39,9 @@ jobs:
     name: Classe de risque
     # Ni fork ni Dependabot : leur jeton est en lecture seule.
     if: github.event.action != 'labeled' && github.event.action != 'unlabeled' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login != 'dependabot[bot]'
+    concurrency:
+      group: risque-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     permissions:
       contents: read
