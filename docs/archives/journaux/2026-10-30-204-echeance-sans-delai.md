@@ -1,8 +1,6 @@
-# Journal du 2026-10-30
+# 2026-10-30 — Échéance d'une demande d'un modèle sans délai cible (REQ-22)
 
-<sub>[← Archives](readme.md)</sub>
-
-## Échéance d'une demande d'un modèle sans délai cible (REQ-22)
+<sub>[← Archives](../readme.md)</sub>
 
 - **Quoi** : la garde de l'échéance passe du modèle (`CatalogItemId`) au délai cible du modèle
   (`TargetHours`) : un User modifie librement l'échéance souhaitée d'une demande issue d'un

@@ -11,7 +11,9 @@ section **Mise à jour** de chaque étape avant de mettre à jour une installati
 
 Le détail au jour le jour (sujets traités, raisons, commits) est dans les
 [journaux](docs/archives/readme.md) ; les notes complètes de chaque version, une fois
-publiée, dans les [releases](https://github.com/chrraj7/S-Aloha/releases).
+publiée, dans les [releases](https://github.com/chrraj7/S-Aloha/releases). Les notes des
+dernières fusions attendent dans [`changelog.d/`](changelog.d/readme.md) d'être versées
+ci-dessous, chaque lundi.
 
 ## Non publié
 
@@ -208,9 +210,6 @@ publiée, dans les [releases](https://github.com/chrraj7/S-Aloha/releases).
 
 ### Corrigé
 
-- **Échéance d'une demande d'un modèle sans délai cible** (REQ-22) : un User ne pouvait plus
-  modifier l'échéance souhaitée d'une demande issue d'un modèle du catalogue sans délai cible ;
-  seule l'échéance calculée d'un modèle à délai cible reste réservée aux gestionnaires.
 - **« Ouvrir un problème lié »** (INC-14) : le bouton de la fiche d'un incident échouait pour
   un utilisateur de plusieurs périmètres (« Choisir le périmètre de l'enregistrement. ») et,
   pour un Admin, créait le problème dans le périmètre par défaut ; le problème est désormais
