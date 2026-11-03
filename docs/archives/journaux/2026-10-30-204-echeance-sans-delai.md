@@ -11,7 +11,6 @@
   spécification fait foi ; le tableau des droits (§ 2) et REQ-22 deviennent « … d'un modèle à
   délai cible ».
 - **Fichiers** : `backend/Modules/ServiceRequestManagement/Controllers/ServiceRequestsController.cs`,
-  `tests/SAloha.Api.Tests/RequestCatalogTests.cs`,
-  `frontend/src/modules/service-request-management/config.jsx` (commentaire)
+  `tests/SAloha.Api.Tests/RequestCatalogTests.cs`
 - **Documentation** : gestion des demandes (§ 2, REQ-22), CHANGELOG (§ Corrigé)
 - **Commit** : correction de #204 (scénario 3)
