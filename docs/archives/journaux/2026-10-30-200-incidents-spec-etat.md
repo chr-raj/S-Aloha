@@ -1,8 +1,6 @@
-# Journal du 2026-10-30
+# 2026-10-30 — Spécification des incidents remise sur l'état du code (INC-09, INC-19, INC-23)
 
-<sub>[← Archives](readme.md)</sub>
-
-## Spécification des incidents remise sur l'état du code (INC-09, INC-19, INC-23)
+<sub>[← Archives](../readme.md)</sub>
 
 - **Quoi** : quatre statuts périmés de la spécification des incidents corrigés, sans changement
   de code : § 4, les transitions sont contraintes (INC-09 ✅, `Incident.Transitions`), plus
