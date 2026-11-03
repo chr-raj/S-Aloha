@@ -1,8 +1,6 @@
-# Journal du 2026-11-03
+# 2026-11-03 — Couverture des tests de l'API publiée en CI, sans seuil (Q5)
 
-<sub>[← Archives](readme.md)</sub>
-
-## Couverture des tests de l'API publiée en CI, sans seuil (Q5)
+<sub>[← Archives](../readme.md)</sub>
 
 - **Quoi** : le job **API** de la CI mesure la couverture (coverlet, `coverlet.collector`
   10.1.0), en ajoute le résumé (taux de lignes et de branches) au résumé du job et publie le
@@ -11,7 +9,7 @@
   de PR. Les migrations, générées, sont exclues du rapport. Mesuré hors CI le 2026-11-03, sans
   les tests SSH et SNMP (conteneurs de test indisponibles) :
   90,2 % des lignes et 73,7 % des branches (99 % des lignes avec les migrations).
-- **Pourquoi** : chantier Q5 du plan d'action ([audit du 2026-10-16](audit-code-2026-10-16.md)
+- **Pourquoi** : chantier Q5 du plan d'action ([audit du 2026-10-16](../audit-code-2026-10-16.md)
   § 8) : savoir quelles parties de l'API manquent de tests.
 - **Fichiers** : `.github/workflows/ci.yml`, `tests/SAloha.Api.Tests/SAloha.Api.Tests.csproj`
 - **Documentation** : architecture (§ 9 Tests, intégration continue), plan d'action (Q5)

@@ -77,6 +77,17 @@ Le job **DCO** de la CI le vérifie sur chaque pull request : un commit sans
 `Signed-off-by` à l'adresse de son auteur bloque la fusion. Pour signer après coup
 tous les commits de la branche : `git rebase --signoff main`.
 
+## Preuve et garde-fous
+
+Une pull request qui modifie le code de l'API ou de l'interface ajoute ou modifie un test
+qui **échoue sans son changement** : le job **Preuve** rejoue ses tests sur le code de
+`main` et le vérifie ([`scripts/preuve.py`](scripts/preuve.py)). Le job **Garde-fous**
+refuse qu'une PR supprime, réduise ou désactive des tests, ou modifie l'outillage de
+vérification (workflows, scripts de contrôle, configuration des tests) sans l'accord du
+mainteneur ([`scripts/garde-fous.py`](scripts/garde-fous.py)). Une refactorisation sans
+effet observable le dit dans sa description : le mainteneur pose alors
+`preuve-non-requise`.
+
 Le job **Hygiène** signale (sans bloquer, pour l'instant) tout trailer autre que
 `Signed-off-by` — ligne de co-auteur, lien de session d'un outil — et les termes réservés
 du projet (noms et adresses internes que le dépôt public ne doit pas contenir) :
