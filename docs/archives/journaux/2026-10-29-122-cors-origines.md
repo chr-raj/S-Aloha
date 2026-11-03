@@ -6,11 +6,12 @@
   `Cors:AllowedOrigins`, vide par défaut : une origine non listée ne reçoit pas
   `Access-Control-Allow-Origin`, une origine listée le reçoit (sans cookie : l'appel porte
   le jeton). Tests d'API : requête de prévol et requête simple, origine listée et deux
-  origines non listées (dont une qui prolonge l'origine admise).
+  origines non listées (dont une qui prolonge l'origine admise), et défaut sans origine. Le
+  test a sa propre instance de l'API sur la base de la collection : l'outillage commun
+  (`ApiFixture`) n'est pas modifié.
 - **Pourquoi** : durcissement avant production (sécurité § Points de durcissement) ; le
   frontend fourni passe par nginx, à la même origine, et n'a besoin d'aucune origine externe.
-- **Fichiers** : `backend/Program.cs`, `tests/SAloha.Api.Tests/CorsTests.cs`,
-  `tests/SAloha.Api.Tests/ApiFixture.cs`
+- **Fichiers** : `backend/Program.cs`, `tests/SAloha.Api.Tests/CorsTests.cs`
 - **Documentation** : exploitation (§ Configuration), sécurité (points de durcissement), plan
   d'action (S3), CHANGELOG (§ Sécurité)
 - **Commit** : #122 (S3)
