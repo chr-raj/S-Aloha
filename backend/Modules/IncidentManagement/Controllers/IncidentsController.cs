@@ -126,6 +126,11 @@ public class IncidentsController(AppDbContext db) : RecordController<Incident, I
         if (status == "En attente" && e.Status != "En attente" && e.OnHoldReason is null)
             return $"Choisir le motif de l'attente : {string.Join(", ", Incident.OnHoldReasons)}.";
 
+        // INC-13 (décision du 2026-10-26) : un majeur se déclare sans responsable, mais ne quitte
+        // « Nouveau » qu'avec un gestionnaire pour responsable (vérifié à sa désignation).
+        if (e.IsMajor && e.Status == "Nouveau" && status != "Nouveau" && string.IsNullOrWhiteSpace(e.OwnerId))
+            return "Incident majeur : désigner un gestionnaire pour responsable avant de le sortir de « Nouveau ».";
+
         // INC-06 : la prise en charge suppose un responsable, utilisateur ou groupe.
         if (status == "En cours" && string.IsNullOrWhiteSpace(e.OwnerId))
             return "Désigner un responsable (utilisateur ou groupe) pour prendre l'incident en charge.";

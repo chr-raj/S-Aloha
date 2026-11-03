@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace SAloha.Api.Tests;
 
-/// <summary>Incidents, sortie du MVP : rôle du responsable d'un incident majeur (INC-13), SLA en risque ou dépassé (INC-24).</summary>
+/// <summary>Incidents, sortie du MVP : rôle du responsable d'un incident majeur et sortie de « Nouveau » (INC-13), SLA en risque ou dépassé (INC-24).</summary>
 [Collection("api")]
 public class IncidentExitMvpTests(ApiFixture api)
 {
@@ -59,6 +59,42 @@ public class IncidentExitMvpTests(ApiFixture api)
         {
             title = "INC-13 renommé", impact = "Élevé", urgency = "Élevée", isMajor = true, ownerType = "User", ownerId = "chef.inc13", ownerDisplayName = "Chef"
         }));
+    }
+
+    [Fact]
+    public async Task INC_13_un_majeur_sans_responsable_ne_sort_pas_de_Nouveau()
+    {
+        // Décision du 2026-10-26 (#200) : un majeur se déclare sans responsable, mais ne quitte
+        // « Nouveau » qu'avec un gestionnaire pour responsable ; la console le signale.
+        var m = api.Client("Manager", "inc13c.manager");
+        object Inc(string? status, string? owner) => new
+        {
+            title = "INC-13 sans responsable", impact = "Élevé", urgency = "Élevée", isMajor = true, status,
+            ownerType = "User", ownerId = owner, ownerDisplayName = owner,
+            resolution = status == "Résolu" ? "Rétabli" : null, resolutionCode = status == "Résolu" ? "Correctif appliqué" : null
+        };
+        var inc = await Json(await m.PostAsJsonAsync("/api/incidents", Inc(null, null)));
+        var url = $"/api/incidents/{Id(inc)}";
+        string? Status(JsonElement console) => console.GetProperty("management").GetProperty("majorIncidents").EnumerateArray()
+            .Single(i => Id(i) == Id(inc)).GetProperty("status").GetString();
+        Assert.Equal("Responsable à désigner", Status(await Json(await m.GetAsync("/api/console"))));
+
+        // Relié à un problème (INC-15), il ne se résout pas pour autant sans responsable.
+        var p = await Json(await m.PostAsJsonAsync("/api/problems", new
+        {
+            title = "Cause INC-13", description = "d", impact = "Moyen", urgency = "Moyenne", category = "", affectedService = "", source = "Proactif"
+        }));
+        await Json(await m.PostAsJsonAsync("/api/links", new { fromType = "incident", fromId = Id(inc), toReference = p.GetProperty("reference").GetString() }));
+        foreach (var target in new[] { "Résolu", "En cours" })
+        {
+            var refused = await m.PutAsJsonAsync(url, Inc(target, null));
+            Assert.Equal(HttpStatusCode.BadRequest, refused.StatusCode);
+            Assert.Contains("Incident majeur : désigner un gestionnaire", await refused.Content.ReadAsStringAsync());
+        }
+
+        // Un gestionnaire désigné : la prise en charge passe, la console n'alerte plus.
+        await Json(await m.PutAsJsonAsync(url, Inc("En cours", "chef.inc13c")));
+        Assert.Equal("En cours", Status(await Json(await m.GetAsync("/api/console"))));
     }
 
     [Fact]
