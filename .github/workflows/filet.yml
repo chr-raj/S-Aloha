@@ -1,0 +1,51 @@
+# Filet après fusion : si la CI de main échoue, une issue `main-rouge` (et `a-corriger`)
+# nomme le commit, sa PR, les jobs en échec et la commande d'annulation. L'annulation
+# elle-même passe par une PR comme tout changement (règles de main).
+name: Filet
+
+on:
+  workflow_run:  # zizmor: ignore[dangerous-triggers]
+    # Sûr ici : rien n'est extrait ni exécuté du dépôt, seule l'API est lue.
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  issue:
+    name: Main rouge
+    if: github.event.workflow_run.event == 'push' && github.event.workflow_run.conclusion == 'failure'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      actions: read
+    steps:
+      - name: Issue main-rouge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SHA: ${{ github.event.workflow_run.head_sha }}
+          RUN: ${{ github.event.workflow_run.id }}
+          URL: ${{ github.event.workflow_run.html_url }}
+        run: |
+          court=${SHA:0:7}
+          if gh issue list -R "$GITHUB_REPOSITORY" --label main-rouge --state all --search "$court in:title" --json number --jq '.[0].number' | grep -q .; then
+            echo "Issue déjà ouverte pour $court."; exit 0
+          fi
+          pr=$(gh api "repos/$GITHUB_REPOSITORY/commits/$SHA/pulls" --jq '.[0].number // empty')
+          jobs=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN/jobs" --jq '[.jobs[] | select(.conclusion == "failure") | .name] | join(", ")')
+          {
+            echo "La CI de \`main\` a échoué sur $court${pr:+ (fusion de #$pr)}."
+            echo
+            echo "- Jobs en échec : ${jobs:-inconnus}"
+            echo "- Exécution : $URL"
+            echo
+            echo "Annulation, par une PR comme tout changement :"
+            echo
+            echo '```'
+            echo "git switch -c fix/annulation-$court origin/main && git revert --no-edit -s $SHA"
+            echo '```'
+          } > corps.md
+          gh issue create -R "$GITHUB_REPOSITORY" --title "main rouge après $court" --label main-rouge --label a-corriger --body-file corps.md

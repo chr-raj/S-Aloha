@@ -1,8 +1,6 @@
-# Journal du 2026-11-03
+# 2026-11-03 — Découverte : un actif rapproché ne suit pas son CI hors de son périmètre (PER-07)
 
-<sub>[← Archives](readme.md)</sub>
-
-## Découverte : un actif rapproché ne suit pas son CI hors de son périmètre (PER-07)
+<sub>[← Archives](../readme.md)</sub>
 
 - **Quoi** : au scan suivant, un actif « Rapproché » ne met à jour son CI que si ce CI est
   toujours au périmètre de l'actif ; déplacé ailleurs (PER-07), l'actif repasse par le

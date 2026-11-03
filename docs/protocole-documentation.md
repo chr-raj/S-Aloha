@@ -46,7 +46,7 @@ Chaque changement est replié dans le document de [`reference/`](reference/) con
 | `App.jsx`, `core/`, `modules/*/pages` | [frontend](reference/frontend.md) § Routes et Structure |
 | `styles.css`, thème, composants visuels | [frontend](reference/frontend.md) § Design ; captures d'écran |
 | Nouveau terme métier ou technique | [glossaire](reference/glossaire.md) |
-| Fonctionnalité visible par l'utilisateur | [README](../README.md), et section « Non publié » du [journal des versions](../CHANGELOG.md) |
+| Fonctionnalité visible par l'utilisateur | [README](../README.md), et une note dans [`changelog.d/`](../changelog.d/readme.md) pour le [journal des versions](../CHANGELOG.md) |
 | Décision structurante actée | nouvel ADR dans [`decisions/`](decisions/readme.md) |
 
 Une interface modifiée rend les **captures d'écran** obsolètes : les régénérer
@@ -62,25 +62,36 @@ preview → Edit → Upload an image*.
 
 ## 3. Journaliser les sujets traités
 
-Les sujets traités du jour sont consignés dans **`archives/journal-AAAA-MM-JJ.md`**. Le
-journal du jour est complété au fil des passages ; il est **figé le lendemain**, comme
-toute archive.
+Chaque sujet traité a **son propre fichier** : `archives/journaux/AAAA-MM-JJ-identifiant.md`,
+où l'identifiant est l'issue ou la règle traitée (`2026-11-03-125.md`, `2026-11-03-per-07.md`),
+en minuscules, chiffres et tirets. Deux PR ouvertes le même jour n'écrivent ainsi jamais
+dans le même fichier, et aucun index n'est à tenir : le dossier, trié par nom, se lit dans
+l'ordre chronologique. Une entrée est **figée** dès sa fusion, comme toute archive. Les
+journaux d'un fichier par jour (`archives/journal-AAAA-MM-JJ.md`, jusqu'au 2026-11-02)
+restent tels quels.
 
-Une entrée par sujet :
+Format d'une entrée :
 
 ```markdown
-## Titre du sujet
+# AAAA-MM-JJ — Titre du sujet
 
 - **Quoi** : ce qui a été fait, en une ou deux phrases
 - **Pourquoi** : le besoin, le défaut ou la décision d'origine
 - **Fichiers** : les principaux fichiers touchés
 - **Documentation** : les documents mis à jour, ADR créé le cas échéant
-- **Commit** : le hash, ou « non commité » si le travail est en cours
+- **Commit** : l'issue ou l'identifiant traité (le hash n'existe qu'après la fusion)
 ```
 
 Un journal n'est pas un changelog de fichiers : il raconte des **sujets** (une
 fonctionnalité, un correctif, une décision), pour retrouver plus tard ce qui a été fait,
 quand et pourquoi.
+
+La note du **journal des versions** suit la même règle : une note par fichier dans
+[`changelog.d/`](../changelog.d/readme.md), jamais dans `CHANGELOG.md` directement.
+`python3 scripts/changelog.py` vérifie les notes (contrôle « Documentation » de la CI) ;
+`--assembler` les verse dans la section « Non publié », à la passe de publication du lundi.
+Une PR ouverte avant ce changement convertit son entrée et sa note à la prochaine mise à
+jour de sa branche.
 
 ## 4. Solder le plan d'action
 
