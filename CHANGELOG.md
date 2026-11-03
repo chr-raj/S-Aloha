@@ -11,7 +11,9 @@ section **Mise à jour** de chaque étape avant de mettre à jour une installati
 
 Le détail au jour le jour (sujets traités, raisons, commits) est dans les
 [journaux](docs/archives/readme.md) ; les notes complètes de chaque version, une fois
-publiée, dans les [releases](https://github.com/chrraj7/S-Aloha/releases).
+publiée, dans les [releases](https://github.com/chrraj7/S-Aloha/releases). Les notes des
+dernières fusions attendent dans [`changelog.d/`](changelog.d/readme.md) d'être versées
+ci-dessous, chaque lundi.
 
 ## Non publié
 
@@ -208,12 +210,6 @@ publiée, dans les [releases](https://github.com/chrraj7/S-Aloha/releases).
 
 ### Corrigé
 
-- **Champs réservés aux gestionnaires sur une fiche** (INC-13, PER-06) : la case « Incident
-  majeur », le commentaire sur un conflit de calendrier d'un changement et les champs de
-  gestionnaire d'une déclaration réglementaire suivaient le rôle AD. Ils suivent désormais le
-  rôle sur le périmètre de l'enregistrement, comme l'API : le gestionnaire d'un périmètre,
-  User dans l'AD, déclare un incident majeur depuis la fiche ; un Manager AD simple User du
-  périmètre ne voit plus la case active.
 - **« Ouvrir un problème lié »** (INC-14) : le bouton de la fiche d'un incident échouait pour
   un utilisateur de plusieurs périmètres (« Choisir le périmètre de l'enregistrement. ») et,
   pour un Admin, créait le problème dans le périmètre par défaut ; le problème est désormais
@@ -222,6 +218,10 @@ publiée, dans les [releases](https://github.com/chrraj7/S-Aloha/releases).
   « Qualifier » suivait le rôle de l'annuaire ; il suit désormais le rôle sur le périmètre de
   l'incident, comme l'API — un gestionnaire du périmètre le voit, un Manager de l'annuaire
   simple utilisateur de ce périmètre ne le voit plus.
+- **Échéance d'une demande du catalogue** (REQ-22) : enregistrer la fiche d'une demande issue
+  d'un modèle à délai cible était refusé à un User (« Seul un gestionnaire modifie
+  l'échéance… »), et ramenait l'échéance à minuit pour un gestionnaire ; le même jour renvoyé
+  par le formulaire garde désormais l'échéance calculée, heure comprise.
 - **Graphiques du reporting** : un graphique affiché d'abord vide (« Aucune donnée sur la
   période »), ou réaffiché après « Voir les données », gardait une largeur de repli étirée à
   sa carte, avec des graduations agrandies ; il suit de nouveau la largeur de sa carte.
@@ -253,6 +253,11 @@ publiée, dans les [releases](https://github.com/chrraj7/S-Aloha/releases).
 
 ### Sécurité
 
+- **Changement autorisé modifié par un gestionnaire** (CHG-07, CHG-20, CHG-21, CHG-22) : la
+  modification revient à l'évaluation quand elle est faite par le demandeur, quand le
+  changement relève du CAB (Normal à risque Élevé) ou quand le nouveau créneau crée un conflit
+  sans commentaire de l'autorité ; sinon, elle vaut autorisation au nom du gestionnaire qui
+  l'a faite, et non plus de celui qui avait autorisé la version précédente.
 - **Exports CSV : cellules neutralisées** (ADM-31, REP-08, inventaire, synthèse de conformité) :
   une valeur texte qui commence par `=`, `+`, `-`, `@`, une tabulation ou un retour chariot
   est précédée d'une apostrophe, pour que le tableur la lise comme du texte ; les nombres
