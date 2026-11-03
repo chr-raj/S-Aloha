@@ -1,8 +1,6 @@
-# Journal du 2026-10-31
+# 2026-10-31 — Référentiels sans périmètre : les écrans suivent le rôle sur les périmètres (PER-13)
 
-<sub>[← Archives](readme.md)</sub>
-
-## Référentiels sans périmètre : les écrans suivent le rôle sur les périmètres (PER-13)
+<sub>[← Archives](../readme.md)</sub>
 
 - **Quoi** : un calcul partagé, `useManagesPerimeter` (Admin, ou gestionnaire d'au moins un
   périmètre ; rôle de l'annuaire en repli tant que la liste n'est pas chargée), commande les
