@@ -1,8 +1,6 @@
-# Journal du 2026-11-02
+# 2026-11-02 — Clôture d'un incident réservée au gestionnaire (INC-10, partie manuelle)
 
-<sub>[← Archives](readme.md)</sub>
-
-## Clôture d'un incident réservée au gestionnaire (INC-10, partie manuelle)
+<sub>[← Archives](../readme.md)</sub>
 
 - **Quoi** : le passage Résolu → Clos d'un incident demande un gestionnaire du périmètre de
   l'incident ; un User reçoit 403. La clôture automatique, 5 jours ouvrés après la
