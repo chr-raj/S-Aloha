@@ -103,7 +103,7 @@ approbation ; seules les transitions ci-dessous sont permises (SOC-05).
 | Soumise → Rejetée | Manager | Motif de rejet | | ✅ (motif) |
 | Soumise, Approuvée → Annulée | Demandeur, Manager | Pas encore En cours | `CancelledAt` | ✅ REQ-09 |
 | Approuvée → En cours | Tous | Responsable renseigné | | ✅ (approbation exigée) / 🔜 (responsable) |
-| En cours → Satisfaite | Responsable, Manager | Toutes les tâches Terminée ou Annulée | `FulfilledAt` | ✅ REQ-25 |
+| En cours → Satisfaite | Responsable, Manager | Toutes les tâches Terminée ou Annulée | `FulfilledAt` | ✅ REQ-25 (responsable avant la modification, ou membre du groupe responsable ; sinon 400) |
 | Satisfaite → En cours | Demandeur, bénéficiaire, Manager | Motif (`ContestReason`) ; dans les 5 jours ouvrés | `FulfilledAt` effacé ; responsable notifié | ✅ REQ-10 |
 | Satisfaite → Close | Demandeur, Manager, ou auto après 5 jours ouvrés | | `ClosedAt` ; `AutoClosed` si automatique, demandeur notifié | ✅ REQ-11 |
 | Rejetée, Annulée, Close → … | — | Statuts finaux | | ✅ REQ-08 |

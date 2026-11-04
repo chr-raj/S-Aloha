@@ -49,6 +49,44 @@ public class RequestContestTests(ApiFixture api)
     }
 
     [Fact]
+    public async Task REQ_25_seuls_le_responsable_et_un_gestionnaire_satisfont_la_demande()
+    {
+        var manager = api.Client("Manager", "req25s.manager");
+        var requester = api.Client("User", "req25s.demandeur");
+        object Body(string status, string ownerType = "User", string ownerId = "tech.req25s") => new
+        {
+            title = "Accès à l'outil de paie", requestedItem = "Accès applicatif", status, ownerType, ownerId, ownerDisplayName = ownerId
+        };
+        async Task<string> InProgress(string ownerType = "User", string ownerId = "tech.req25s")
+        {
+            var r = await Json(await requester.PostAsJsonAsync("/api/requests", Body("Soumise", ownerType, ownerId)));
+            var url = $"/api/requests/{Id(r)}";
+            await Json(await manager.PutAsJsonAsync(url, Body("Approuvée", ownerType, ownerId)));
+            await Json(await manager.PutAsJsonAsync(url, Body("En cours", ownerType, ownerId)));
+            return url;
+        }
+
+        // Ni le tiers, ni le demandeur : la satisfaction est déclarée par qui exécute (§ 4).
+        var url = await InProgress();
+        Assert.Equal(HttpStatusCode.BadRequest, (await api.Client("User", "req25s.tiers").PutAsJsonAsync(url, Body("Satisfaite"))).StatusCode);
+        Assert.Equal(HttpStatusCode.BadRequest, (await requester.PutAsJsonAsync(url, Body("Satisfaite"))).StatusCode);
+        // Se désigner responsable dans la même modification ne suffit pas : le responsable d'avant compte.
+        Assert.Equal(HttpStatusCode.BadRequest,
+            (await requester.PutAsJsonAsync(url, Body("Satisfaite", ownerId: "req25s.demandeur"))).StatusCode);
+        Assert.Equal("En cours", Str(await Json(await requester.GetAsync(url)), "status"));
+        // Le responsable, oui.
+        Assert.Equal("Satisfaite", Str(await Json(await api.Client("User", "tech.req25s").PutAsJsonAsync(url, Body("Satisfaite"))), "status"));
+
+        // Responsable de type groupe : un membre du groupe satisfait la demande.
+        var grp = await InProgress("Group", "GRP-REQ25S");
+        Assert.Equal("Satisfaite", Str(await Json(await api.Client("User", "membre.req25s", "GRP-REQ25S").PutAsJsonAsync(grp, Body("Satisfaite", "Group", "GRP-REQ25S"))), "status"));
+
+        // Un gestionnaire, oui.
+        var m = await InProgress();
+        Assert.Equal("Satisfaite", Str(await Json(await manager.PutAsJsonAsync(m, Body("Satisfaite"))), "status"));
+    }
+
+    [Fact]
     public async Task REQ_10_contestation_motivee_par_le_demandeur_ou_le_beneficiaire_dans_les_5_jours_ouvres()
     {
         var requester = api.Client("User", "req10.demandeur");
