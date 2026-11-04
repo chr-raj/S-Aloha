@@ -203,11 +203,14 @@ public class IncidentsController(AppDbContext db) : RecordController<Incident, I
     /// Le journal d'audit trace chaque enfant ; déclarant et utilisateur affecté sont notifiés.
     /// Un enfant majeur sans problème relié reste ouvert (INC-15 sans exception, décision du
     /// 2026-10-26) ; la réponse le liste avec la raison.
+    /// Seuls les enfants du périmètre du parent suivent : le rattachement exige le même
+    /// périmètre, mais un changement de périmètre (PER-07) conserve le lien (PER-05, PER-06).
     /// </summary>
     private async Task ResolveChildrenAsync(Incident parent)
     {
         var now = DateTime.UtcNow;
-        foreach (var child in await Db.Incidents.Where(c => c.ParentId == parent.Id && !Incident.Done.Contains(c.Status)).ToListAsync())
+        foreach (var child in await Db.Incidents.Where(c => c.ParentId == parent.Id && c.PerimeterId == parent.PerimeterId
+                     && !Incident.Done.Contains(c.Status)).ToListAsync())
         {
             if (child.IsMajor && !await ItemLinks.IsLinkedToAsync(Db, "incident", child.Id, "problem"))
             {
