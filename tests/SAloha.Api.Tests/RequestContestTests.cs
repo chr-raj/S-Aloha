@@ -106,4 +106,40 @@ public class RequestContestTests(ApiFixture api)
             new { target = "incident", reason = "C'est une panne, pas une demande" }))).GetProperty("target");
         Assert.StartsWith("INC-", Str(incident, "reference"));
     }
+
+    [Fact]
+    public async Task REQ_12_INC_21_l_incident_requalifie_a_son_echeance_SLA()
+    {
+        var m = api.Client("Manager", "req12sla.manager");
+        var svc = Id(await Json(await m.PostAsJsonAsync("/api/services", new
+        {
+            title = "Service REQ-12 SLA", status = "En service", criticality = "Moyenne", ownerType = "User", ownerId = "svc.owner", ownerDisplayName = "Owner"
+        })));
+        object Sla(string? status) => new
+        {
+            title = "SLA REQ-12", status, serviceId = svc, customer = "REQ-12", resolutionHoursP1 = 4, resolutionHoursP2 = 8,
+            resolutionHoursP3 = 24, resolutionHoursP4 = 48, validFrom = DateTime.UtcNow.Date.AddMonths(-6),
+            responseHoursP1 = 1, responseHoursP2 = 2, responseHoursP3 = 4, responseHoursP4 = 8
+        };
+        var sla = await Json(await m.PostAsJsonAsync("/api/agreements", Sla(null)));
+        await Json(await m.PutAsJsonAsync($"/api/agreements/{Id(sla)}", Sla("En vigueur")));
+        // Témoin : un incident déclaré directement sur le service a son échéance.
+        var direct = await Json(await m.PostAsJsonAsync("/api/incidents", new { title = "Témoin REQ-12", impact = "Moyen", urgency = "Moyenne", serviceId = svc }));
+        Assert.Equal(JsonValueKind.String, direct.GetProperty("resolutionDueAt").ValueKind);
+        var requester = api.Client("User", "req12sla.demandeur");
+        var r = await Json(await requester.PostAsJsonAsync("/api/requests", new
+        {
+            title = "Messagerie inaccessible", requestedItem = "Messagerie", serviceId = svc,
+            ownerType = "User", ownerId = "tech.req", ownerDisplayName = "Tech"
+        }));
+        var target = (await Json(await requester.PostAsJsonAsync($"/api/requests/{Id(r)}/requalify",
+            new { target = "incident", reason = "C'est une panne, pas une demande" }))).GetProperty("target");
+
+        // Comme un incident déclaré directement sur le service : échéances posées dès la création.
+        var incident = await Json(await requester.GetAsync($"/api/incidents/{Id(target)}"));
+        Assert.Equal(svc, incident.GetProperty("serviceId").GetInt32());
+        Assert.Equal(JsonValueKind.String, incident.GetProperty("resolutionDueAt").ValueKind);
+        Assert.Equal(JsonValueKind.String, incident.GetProperty("responseDueAt").ValueKind);
+        Assert.NotEqual("Sans SLA", Str(incident, "slaState"));
+    }
 }

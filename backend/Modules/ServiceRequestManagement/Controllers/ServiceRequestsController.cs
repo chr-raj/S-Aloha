@@ -222,6 +222,12 @@ public class ServiceRequestsController(AppDbContext db) : RecordController<Servi
                 Status = "Nouveau", Impact = "Moyen", Urgency = "Moyenne", Priority = Priority.Compute("Moyen", "Moyenne"),
                 ServiceId = e.ServiceId, AffectedService = e.AffectedService, CreatedBy = Me, CreatedByDisplayName = MyDisplay
             });
+        // INC-21, SLM-13 : l'incident ne passe pas par IncidentsController ; ses échéances se posent ici, comme à sa création.
+        if (target is IncidentManagement.Incident inc)
+        {
+            inc.ResolutionDueAt = await IncidentManagement.IncidentSla.DueAsync(Db, inc);
+            inc.ResponseDueAt = await IncidentManagement.IncidentSla.ResponseDueAsync(Db, inc);
+        }
         Db.ItemLinks.Add(new ItemLink { FromType = LinkType, FromId = e.Id, ToType = dto.Target, ToId = target.Id, CreatedBy = Me });
         var from = e.Status;
         e.Status = "Annulée";

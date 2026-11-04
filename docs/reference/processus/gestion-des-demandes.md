@@ -123,7 +123,7 @@ approbation ; seules les transitions ci-dessous sont permises (SOC-05).
 | REQ-09 | Statut **Annulée** : le demandeur (ou un Manager) annule une demande Soumise ou Approuvée, tant qu'elle n'est pas En cours | ✅ | 1 |
 | REQ-10 | **Contestation** : dans les 5 jours ouvrés, le demandeur ou le bénéficiaire renvoie une demande Satisfaite En cours, avec motif | ✅ | 2 |
 | REQ-11 | **Clôture** à la confirmation du demandeur, ou automatique 5 jours ouvrés après Satisfaite | ✅ | 3 |
-| REQ-12 | Une demande qui révèle un **besoin non standard** se requalifie : créer un changement (ou un incident) relié, puis annuler la demande avec ce motif (`CancelReason`, qui cite la référence créée) ; demandeur ou gestionnaire, demande Soumise ou Approuvée (mêmes droits que REQ-09) | ✅ | 2 |
+| REQ-12 | Une demande qui révèle un **besoin non standard** se requalifie : créer un changement (ou un incident) relié, puis annuler la demande avec ce motif (`CancelReason`, qui cite la référence créée) ; demandeur ou gestionnaire, demande Soumise ou Approuvée (mêmes droits que REQ-09) | ✅ (l'incident créé reprend le service de la demande et reçoit dès sa création ses échéances de résolution et de prise en charge, INC-21, SLM-13) | 2 |
 
 ### Catalogue de demandes
 
