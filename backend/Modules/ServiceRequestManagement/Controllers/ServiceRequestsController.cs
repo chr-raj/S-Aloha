@@ -5,6 +5,7 @@ using SAloha.Api.Core.Data;
 using SAloha.Api.Core.Records;
 using SAloha.Api.Core.Notifications;
 using SAloha.Api.Core.Links;
+using SAloha.Api.Core.Auth;
 
 namespace SAloha.Api.Modules.ServiceRequestManagement;
 
@@ -126,11 +127,18 @@ public class ServiceRequestsController(AppDbContext db) : RecordController<Servi
     protected override bool RequiresManager(string status) => status is "Approuvée" or "Rejetée";
 
     // Une demande rejetée est terminée : elle n'est ni traitée ni close.
-    /// <summary>REQ-25 : satisfaite, toutes ses tâches sont terminées ou annulées.</summary>
+    /// <summary>
+    /// REQ-25 : satisfaite, toutes ses tâches sont terminées ou annulées ; déclarée par le
+    /// responsable (membre du groupe responsable) ou un gestionnaire (§ 4).
+    /// </summary>
     protected override async Task<string?> CheckStatusAsync(ServiceRequest e, string status)
     {
         if (status == "Satisfaite" && e.Status != "Satisfaite" && e.Id != 0)
         {
+            // Responsable d'avant la modification : se désigner et satisfaire d'un même envoi ne suffit pas.
+            var owner = Db.Entry(e);
+            if (!IsManager && !User.Designates(owner.Property(x => x.OwnerType).OriginalValue, owner.Property(x => x.OwnerId).OriginalValue))
+                return "Seul le responsable de la demande ou un gestionnaire la déclare satisfaite.";
             var open = await Db.RequestTasks.Where(t => t.RequestId == e.Id && !RequestTask.Finished.Contains(t.Status)).Select(t => t.Title).ToListAsync();
             if (open.Count > 0)
                 return $"Tâches encore ouvertes ({string.Join(", ", open.Select(t => $"« {t} »"))}) : les terminer ou les annuler avant de satisfaire la demande.";
