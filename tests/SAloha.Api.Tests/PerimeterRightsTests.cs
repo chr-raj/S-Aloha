@@ -179,6 +179,35 @@ public class PerimeterRightsTests(ApiFixture api)
     }
 
     [Fact]
+    public async Task PER_07_INC_16_la_resolution_du_parent_ne_touche_pas_un_enfant_d_un_autre_perimetre()
+    {
+        var (siege, usine, _, tiana, _) = await Setup("per07c");
+        var t = api.Client("User", tiana);
+        object Inc(string title, int p, string? status = null) => new
+        {
+            title, impact = "Faible", urgency = "Faible", perimeterId = p, status,
+            ownerType = "User", ownerId = tiana, ownerDisplayName = tiana,
+            resolution = status == "Résolu" ? "Commutateur remplacé" : null, resolutionCode = status == "Résolu" ? "Correctif appliqué" : null
+        };
+        var parent = await Json(await t.PostAsJsonAsync("/api/incidents", Inc("Coupure réseau Siège", siege)));
+        var child = await Json(await t.PostAsJsonAsync("/api/incidents", Inc("Poste injoignable", siege)));
+        await Json(await t.PutAsJsonAsync($"/api/incidents/{Id(child)}/parent", new { parentReference = Ref(parent) }));
+
+        // L'enfant change de périmètre (PER-07, Admin) : son lien au parent est conservé.
+        await Json(await api.Client().PutAsJsonAsync($"/api/incidents/{Id(child)}", Inc("Poste injoignable", usine)));
+        Assert.Equal(HttpStatusCode.NotFound, (await t.GetAsync($"/api/incidents/{Id(child)}")).StatusCode);
+
+        await Json(await t.PutAsJsonAsync($"/api/incidents/{Id(parent)}", Inc("Coupure réseau Siège", siege, "En cours")));
+        var resolved = await Json(await t.PutAsJsonAsync($"/api/incidents/{Id(parent)}", Inc("Coupure réseau Siège", siege, "Résolu")));
+        Assert.Equal("Résolu", resolved.GetProperty("status").GetString());
+
+        // La cascade (INC-16) ne franchit pas le périmètre : l'enfant de l'Usine reste ouvert, intact.
+        var c = await Json(await api.Client().GetAsync($"/api/incidents/{Id(child)}"));
+        Assert.Equal("Nouveau", c.GetProperty("status").GetString());
+        Assert.Equal(JsonValueKind.Null, c.GetProperty("resolution").ValueKind);
+    }
+
+    [Fact]
     public async Task PER_05_historique_soumis_a_la_visibilite_de_la_fiche()
     {
         var (siege, usine, lova, tiana, _) = await Setup("per05h");
