@@ -18,7 +18,7 @@
 
 ## Prochaine séance
 
-*Mise à jour le 2026-11-02.* État : 339 règles ✅, une en lot 1
+*Mise à jour le 2026-11-04.* État : 339 règles ✅, une en lot 1
 ([RAG-10](reference/recherche.md), en attente d'un jeu de requêtes réelles), une en lot 3
 (RAG-12, indexation des pièces jointes), aucune en lot 2 ([synthèse](reference/processus/readme.md)) ;
 tous les indicateurs des pratiques sont au tableau de bord. Le lot 3 des pratiques, F7
@@ -29,7 +29,7 @@ tous les indicateurs des pratiques sont au tableau de bord. Le lot 3 des pratiqu
 première version publiée sera **stable**, à la fin de ce plan d'action.
 
 **Reste du plan** : les chantiers à arbitrer ci-dessous, les points avant
-mise en production (section 5 : S1, S2 ; S3 et O1 suivis par les issues de la communauté) et
+mise en production (section 5 : S1, S2 ; S3 et O1 faits le 2026-10-29) et
 les tâches de communauté (section 8).
 
 **À arbitrer avant de commencer** :
@@ -49,7 +49,8 @@ les tâches de communauté (section 8).
   #172 ; S3 et SMTP essayés le 2026-10-24), hors du chemin de fusion.
 - **WinRM** ([CFG-57](reference/processus/gestion-de-la-configuration.md)) à valider sur un
   Windows réel (aucun au laboratoire).
-- **Avant la production** : S1, S2 (section 5) ; issues de la communauté #120 à #126 ouvertes.
+- **Avant la production** : S1, S2 (section 5).
+- **Communauté** : [#126](https://github.com/chrraj7/S-Aloha/issues/126) (captures d'écran de la configuration) reste ouverte ; #120 à #125 sont faites.
 
 ## 1. Bloquants fonctionnels — le processus est inutilisable
 
@@ -98,7 +99,7 @@ Détail : [sécurité § Points de durcissement](reference/securite.md#points-de
 |---|---|---|
 | Q1 | **Tests** : socle en place (API : xUnit + Testcontainers ; frontend : Vitest), B1–B3 et M1, M2, M4–M6 couverts ; étendre aux scénarios R1–R6 (R6 couvert le 2026-10-16) | code |
 | Q2 | **CI** : build backend et frontend, `python3 scripts/check-docs.py` | code |
-| Q4 | Créer les issues GitHub des sections 1 à 7 et les lier ici ; premières **good first issue** ouvertes le 2026-10-19 pour la communauté : [#120](https://github.com/chrraj7/S-Aloha/issues/120) à [#126](https://github.com/chrraj7/S-Aloha/issues/126) | action |
+| Q4 | Créer les issues GitHub des sections 1 à 7 et les lier ici ; premières **good first issue** ouvertes le 2026-10-19 pour la communauté : [#120](https://github.com/chrraj7/S-Aloha/issues/120) à [#126](https://github.com/chrraj7/S-Aloha/issues/126), toutes faites sauf [#126](https://github.com/chrraj7/S-Aloha/issues/126) | action |
 | Q5 | ~~Mesure de la couverture de tests (coverlet) publiée en CI, sans seuil bloquant~~ — fait le 2026-11-03 ([#123](https://github.com/chrraj7/S-Aloha/issues/123), [architecture § 9](reference/architecture.md#9-tests)) ; reste `dotnet format` ([audit du 2026-10-16](archives/audit-code-2026-10-16.md) § 8) | code |
 | ~~Q6~~ | ~~`.dockerignore` pour `backend` et `frontend`~~ — soldé le 2026-10-26 ([audit du 2026-10-16](archives/audit-code-2026-10-16.md) § 9, [#120](https://github.com/chrraj7/S-Aloha/issues/120)) : contexte de construction limité aux sources ([exploitation](reference/exploitation.md)) | code |
 
@@ -114,7 +115,7 @@ restantes sont spécifiées règle par règle dans [`reference/processus/`](refe
 |---|---|---|---|
 | ~~F2~~ | Incidents, Problèmes | ~~Service et catégorie tirés du catalogue et d'un référentiel~~ — soldé le 2026-10-19 | [SOC-27](reference/regles-metier.md#9-traçabilité-commentaires-administration), [SLM-10](reference/processus/gestion-des-niveaux-de-service.md) |
 | ~~F3~~ | Demandes | ~~Tâches d'exécution créées depuis le modèle~~ — soldé le 2026-10-23 (REQ-24, REQ-25) | [REQ-24, REQ-25](reference/processus/gestion-des-demandes.md) |
-| F5 | Configuration | Import en masse et attributs par type de CI faits le 2026-10-23 (rattachement CI ↔ service fait le 2026-10-13, service signalé « dégradé » le 2026-10-21) ; CI à vérifier dans la console fait le 2026-11-03 ([#125](https://github.com/chrraj7/S-Aloha/issues/125)) ; reste exactitude de la CMDB ([#124](https://github.com/chrraj7/S-Aloha/issues/124)) | [CFG-16, CFG-30](reference/processus/gestion-de-la-configuration.md) |
+| ~~F5~~ | Configuration | ~~Import en masse, attributs par type de CI, exactitude de la CMDB~~ — soldé le 2026-11-04 : import et attributs faits le 2026-10-23, exactitude de la CMDB le 2026-10-23 ([#124](https://github.com/chrraj7/S-Aloha/issues/124), CFG-32), CI à vérifier dans la console le 2026-11-03 ([#125](https://github.com/chrraj7/S-Aloha/issues/125)) | [CFG-16, CFG-30](reference/processus/gestion-de-la-configuration.md) |
 | ~~F7~~ | Tous | ~~Pièces jointes, notifications par courriel~~ — soldé le 2026-10-23 (indexation des pièces jointes à arbitrer : RAG-12) | [SOC-22, SOC-25](reference/regles-metier.md#8-notifications) |
 | ~~F8~~ | Connaissances, Incidents | ~~Suggestion d'articles et cas similaires dès la saisie, relier en un clic~~ — soldé le 2026-10-21 | [INC-19](reference/processus/gestion-des-incidents.md), [RAG-09, RAG-11](reference/recherche.md) |
 | ~~F11~~ | Incidents, sécurité | **Déclarations réglementaires** des incidents cyber (NIS 2 : alerte précoce 24 h, notification 72 h, rapport final ; RGPD : 72 h) : lot 2 fait le 2026-10-21 (qualification de l'incident, déclarations, échéances, console, notifications, respect des délais)  ; modèle de contenu par régime et indicateurs faits le 2026-10-23 — soldé | [DRG-08, DRG-21, DRG-22](reference/processus/declarations-reglementaires.md) |
