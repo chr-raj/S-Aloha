@@ -249,7 +249,7 @@ Un module `soon` apparaît grisé, non cliquable, avec le badge « Bientôt ».
 | | CI à vérifier : listes de la console (Mon travail pour le propriétaire, Relances pour le gestionnaire) | Tous (propriétaires), Manager | CFG-15 | ✅ |
 | [Niveaux de service](processus/gestion-des-niveaux-de-service.md) | Catalogue des services | Tous | SLM-01 | ✅ |
 | | Accords (SLA) | Tous | SLM-02 | ✅ |
-| | Respect des SLA (tableau mensuel) | Tous | SLM-20, SLM-21 | 🔜 |
+| | Respect des SLA (tableau mensuel) : tableau de bord, onglet Conformité, « Respect des SLA, par service » ; disponibilité sur la fiche du SLA | Tous | SLM-20, SLM-21 | ✅ |
 | [Connaissances](processus/gestion-des-connaissances.md) | Base de connaissances, avec le bloc « Chercher d'abord » (recherche hybride) en tête du registre | Tous | KB-04, RAG-05 | ✅ |
 | | Brouillons à publier : bloc « Décisions » de la console (KB-21) ; fiche : onglet **Lecture** (Markdown, KB-10) et bloc « Cycle de l'article » (soumission, revue, archivage demandé, utilisation) | Manager, Admin (soumission : tous) | KB-21, KB-10, KB-17 | ✅ (console, fiche) / 🔜 (sous-entrée de menu) |
 | [Amélioration](processus/amelioration-continue.md) | Registre d'amélioration | Tous | CSI-01 | ✅ |
@@ -293,12 +293,12 @@ cycle de vie.
 | Entrée | Visible par | Règle | Statut |
 |---|---|---|---|
 | Catégories (incidents, problèmes) | Manager, Admin | [ADM-50 à ADM-53](administration.md) | ✅ |
-| Catalogue de demandes (modèles) | Manager, Admin | [REQ-20](processus/gestion-des-demandes.md) | 🔜 |
-| Modèles de changement standard | Manager, Admin | [CHG-26](processus/habilitation-des-changements.md) | 🔜 |
-| Périodes de gel | Manager, Admin | [CHG-25](processus/habilitation-des-changements.md) | 🔜 |
-| Import des CI (CSV) | Admin | [CFG-30](processus/gestion-de-la-configuration.md) | 🔜 |
+| Catalogue de demandes (modèles) : menu Demandes, `/requests/catalog` | Manager, Admin | [REQ-20](processus/gestion-des-demandes.md) | ✅ |
+| Modèles de changement standard : menu Changements, `/changes/models` | Manager, Admin | [CHG-26](processus/habilitation-des-changements.md) | ✅ |
+| Périodes de gel : bloc du calendrier des changements, `/changes/schedule` | Manager, Admin | [CHG-25](processus/habilitation-des-changements.md) | ✅ |
+| Import des CI (CSV) : carte « Importer des CI (CSV) » du registre des CI | Admin | [CFG-30](processus/gestion-de-la-configuration.md) | ✅ |
 | Découverte du réseau (`/settings/discovery`) : tâches de scan (balayage IP, SNMP, Active Directory, SSH, Proxmox VE, vCenter, WinRM ; cible, port, identifiant, fréquence, fenêtre, lancement, dernier passage), identifiants du coffre (Admin : communautés SNMP v2c, utilisateurs SNMP v3, comptes SSH par mot de passe ou clé, jetons Proxmox, comptes vCenter et Windows ; secret jamais réaffiché), fins de support, clés d'hôte et certificats retenus (acceptation : Admin), constructeurs par préfixe MAC (import OUI : Admin) | Manager, Admin | [CFG-45 à CFG-57](processus/gestion-de-la-configuration.md) | ✅ |
-| Heures de service (calendriers) | Manager, Admin | [SLM-14](processus/gestion-des-niveaux-de-service.md) | 🔜 |
+| Heures de service (calendriers) : champs d'ouverture et de fermeture de la fiche du service | Manager, Admin | [SLM-14](processus/gestion-des-niveaux-de-service.md) | ✅ |
 | Référentiel NIS 2 : structure embarquée et import du texte des exigences (`/settings/nis2`) | Admin | [NIS-20, NIS-21](processus/conformite-nis2.md) | ✅ |
 
 Le **catalogue des services** reste dans la pratique Niveaux de service : c'est un objet de
