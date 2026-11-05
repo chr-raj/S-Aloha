@@ -299,10 +299,12 @@ de risque de la PR d'après ses chemins : `risque-doc`, `risque-code` ou `risque
 (authentification, données et migrations, périmètres, coffre, pièces jointes, exposition,
 dépendances, chaîne de construction). [`filet.yml`](../../.github/workflows/filet.yml) ouvre
 une issue `main-rouge` quand la CI de `main` échoue, avec le commit, sa PR et la commande
-d'annulation. Deux workflows
+d'annulation. Trois workflows
 d'entretien : [`wiki.yml`](../../.github/workflows/wiki.yml) publie le wiki à chaque poussée
 de `main` qui touche `docs/` ; [`commentaires.yml`](../../.github/workflows/commentaires.yml)
 retire des textes du compte du mainteneur (commentaires, descriptions et revues de PR) un
 pied de page ajouté automatiquement par un outil, dont le motif est lu dans le secret
-`PIED_A_RETIRER`. Voir
+`PIED_A_RETIRER` ; [`fusion-office.yml`](../../.github/workflows/fusion-office.yml) repose
+l'étiquette `fusion-office` sur une PR fusionnée qui ne la porte pas, quand le compte du
+mainteneur y commente « Fusion d'office ». Voir
 [sécurité § Contrôles du dépôt](securite.md#contrôles-du-dépôt).

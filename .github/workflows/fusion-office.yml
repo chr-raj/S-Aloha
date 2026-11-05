@@ -1,0 +1,41 @@
+# Repose l'étiquette `fusion-office` oubliée : le compte du mainteneur commente « Fusion
+# d'office … » sur une PR déjà fusionnée qui ne la porte pas (#254, 2026-11-04). Le suivi
+# des fusions d'office s'appuie sur cette étiquette. Lit et écrit par l'API seulement :
+# rien n'est extrait ni exécuté du dépôt.
+name: Fusion d'office
+
+on:
+  # Déclencheur sûr ici : le job ne tourne que pour le propriétaire et n'exécute aucun code
+  # du dépôt ; le texte du commentaire n'est lu que par l'expression `if`.
+  issue_comment:  # zizmor: ignore[dangerous-triggers]
+    types: [created]
+
+permissions:
+  contents: read
+
+jobs:
+  etiquette:
+    name: Étiquette fusion-office
+    if: >-
+      github.actor == github.repository_owner
+      && github.event.issue.pull_request
+      && startsWith(github.event.comment.body, 'Fusion d''office')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+    steps:
+      - name: Reposer l'étiquette si elle manque
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR: ${{ github.event.issue.number }}
+        run: |
+          if [ "$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR" --jq '.merged')" != true ]; then
+            echo "#$PR n'est pas fusionnée : rien à faire."; exit 0
+          fi
+          if gh api "repos/$GITHUB_REPOSITORY/issues/$PR/labels" --jq '.[].name' | grep -qx fusion-office; then
+            echo "#$PR porte déjà fusion-office."; exit 0
+          fi
+          gh api -X POST "repos/$GITHUB_REPOSITORY/issues/$PR/labels" -f 'labels[]=fusion-office' --jq '[.[].name] | join(",")'
+          echo "fusion-office reposée sur #$PR."
