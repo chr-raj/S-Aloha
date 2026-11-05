@@ -58,7 +58,7 @@ créateur, dates) : [socle](../regles-metier.md#5-règles-communes-aux-processus
 | `FirstResponseAt` | date UTC | auto | Première prise en charge (passage à En cours) | ✅ |
 | `ResolutionDueAt` | date UTC | calculé | Échéance de résolution tirée du SLA (§ 6) | ✅ INC-21 (partiel) |
 | `ResponseDueAt` | date UTC | calculé | Échéance de prise en charge (SLM-13) | ✅ INC-21 (partiel, comme `ResolutionDueAt`) |
-| `OccurredAt` | date UTC | | Début constaté de l'interruption, jamais postérieur à la déclaration (MTTD) ; saisi par l'API, pas encore dans le formulaire | ✅ INC-27 |
+| `OccurredAt` | date UTC | | Début constaté de l'interruption, jamais postérieur à la déclaration (MTTD) ; saisi par l'API, pas encore dans le formulaire, qui le renvoie tel quel à l'enregistrement de la fiche | ✅ INC-27 |
 | `FirstContactResolution` | booléen | auto | Résolu au premier contact ; vide tant que non résolu | ✅ INC-23 |
 | `OwnerChanged` | booléen | auto | Le responsable a changé depuis la création (INC-23) | ✅ |
 | `ReopenCount` | entier | auto | Nombre de réouvertures | ✅ INC-11 |
