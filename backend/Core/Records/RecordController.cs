@@ -246,7 +246,12 @@ public abstract class RecordController<T, TDto, TView>(AppDbContext db) : Contro
             ?? (StatusChosenAtCreation ? Allowed.Check("Statut", dto.Status, Statuses, optional: true) : null);
         if (error is not null) return BadRequest(new { message = error });
         // Les conditions du statut de création s'appliquent aussi (CI En service : propriétaire, CFG-11).
-        var initial = StatusChosenAtCreation && !string.IsNullOrEmpty(dto.Status) ? dto.Status : InitialStatus(probe);
+        var chosen = StatusChosenAtCreation && !string.IsNullOrEmpty(dto.Status);
+        var initial = chosen ? dto.Status! : InitialStatus(probe);
+        // Le statut choisi à la création n'ouvre pas ce que la transition réserve au gestionnaire
+        // (CI créé d'emblée Retiré, CFG-12). Le statut initial par défaut n'est pas concerné :
+        // certaines pratiques réservent toute transition (notifications réglementaires).
+        if (chosen && RequiresManager("", initial) && !IsManager) return Forbid();
         error = await CheckStatusAsync(probe, initial);
         if (error is not null) return BadRequest(new { message = error });
         error = await ConflictAsync(probe);

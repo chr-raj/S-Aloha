@@ -42,7 +42,7 @@ et l'arbitrage du portefeuille (choix d'investissement entre applications ou pro
 | Action | User | Manager | Admin | Statut |
 |---|---|---|---|---|
 | Créer, modifier un CI, gérer ses relations | ✔ | ✔ | ✔ | ✅ |
-| Passer un CI à **Retiré** | ✘ | ✔ | ✔ | ✅ CFG-12 |
+| Passer un CI à **Retiré**, ou le créer à ce statut | ✘ | ✔ | ✔ | ✅ CFG-12 |
 | Enregistrer une vérification | Propriétaire | ✔ | ✔ | ✅ CFG-15 |
 | Consulter le rapport d'inventaire | ✔ | ✔ | ✔ | ✅ CFG-39 |
 | Consulter le sas de staging | ✘ | ✔ | ✔ | ✅ CFG-40 |
@@ -205,6 +205,7 @@ ces mêmes statuts.
 | De → Vers | Qui | Conditions (400 sinon) | Effets | Statut |
 |---|---|---|---|---|
 | — → Planifié ou En service | Tous | Nom, type, environnement ; En service : propriétaire (CFG-11) et champs « En service » des § 3.3 et 3.4 | Référence | ✅ |
+| — → Retiré | Manager | Comme le retrait : un User qui crée un CI au statut Retiré reçoit 403 | Référence | ✅ CFG-12 |
 | Planifié → En service | Tous | Propriétaire renseigné (CFG-11) ; champs « En service » des § 3.3 et 3.4 (CFG-43, CFG-44) | Cycle applicatif aligné (CFG-48) | ✅ |
 | En service ⇄ Hors service | Tous | Champs « En service » des § 3.3 et 3.4 | | ✅ |
 | En service, Hors service, Planifié → Retiré | Manager | Aucun incident ni changement ouvert relié (CFG-13) | Relations conservées (historique), CI exclu des nouveaux liens (CFG-14) ; cycle applicatif « Retirée » | ✅ CFG-12 |
@@ -359,7 +360,7 @@ d'un actif :
 | CFG-07 | Registre filtrable par type (`type`), statut et texte ; le texte cherche aussi le code applicatif, le numéro de série et l'adresse IP | ✅ | |
 | CFG-10 | **Transitions contraintes** selon le § 4.1 (SOC-05) ; Retiré est final | ✅ | 1 |
 | CFG-11 | Le **propriétaire** est obligatoire pour un CI En service | ✅ | 1 |
-| CFG-12 | **Retirer** un CI : Manager uniquement | ✅ | 1 |
+| CFG-12 | **Retirer** un CI, ou le créer au statut Retiré : Manager uniquement | ✅ | 1 |
 | CFG-13 | Un CI relié à un **incident ou changement ouvert** ne peut pas être retiré (400, avec les références en cause) | ✅ | 1 |
 | CFG-14 | Un CI **Retiré** ne peut plus être relié à un nouvel incident, changement ou CI (400) ; ses liens existants restent visibles | ✅ | 1 |
 | CFG-15 | **Vérification** : le propriétaire ou un Manager atteste que la fiche est exacte (`LastVerifiedAt`) ; un CI En service non vérifié depuis **12 mois** remonte en relance au propriétaire. Vérification par `POST /api/configuration-items/{id}/verify` ; relance par notification (relevé périodique). | ✅ | |
