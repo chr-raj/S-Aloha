@@ -283,11 +283,6 @@ public class IncidentsController(AppDbContext db) : RecordController<Incident, I
     }
 
     /// <summary>
-    /// INC-16 : rattacher un incident à un parent (même panne), par sa référence, ou l'en détacher.
-    /// Un seul niveau : le parent n'a pas de parent, l'enfant n'a pas d'enfants ; même périmètre ;
-    /// ni soi-même ni un incident clos ; un incident résolu ou clos ne change plus de parent.
-    /// </summary>
-    /// <summary>
     /// PER-07, INC-16 (décision du mainteneur du 2026-11-04) : un enfant ne quitte pas le
     /// périmètre de son parent ; on le détache d'abord, aucun lien ne change en silence.
     /// </summary>
@@ -299,6 +294,11 @@ public class IncidentsController(AppDbContext db) : RecordController<Incident, I
             : $"Rattaché à {parent.Reference}, d'un autre périmètre : détacher d'abord l'incident de son parent pour le déplacer.";
     }
 
+    /// <summary>
+    /// INC-16 : rattacher un incident à un parent (même panne), par sa référence, ou l'en détacher.
+    /// Un seul niveau : le parent n'a pas de parent, l'enfant n'a pas d'enfants ; même périmètre ;
+    /// ni soi-même ni un incident clos ; un incident résolu ou clos ne change plus de parent.
+    /// </summary>
     [HttpPut("{id:int}/parent")]
     public async Task<IActionResult> SetParent(int id, IncidentParentDto dto)
     {
