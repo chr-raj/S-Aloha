@@ -46,6 +46,9 @@ export const incidentConfig = {
     { key: 'reopenReason', label: 'Motif de réouverture', type: 'textarea', create: false, rows: 2,
       placeholder: 'Obligatoire pour rouvrir un incident résolu.' },
   ],
+  // INC-27 : début constaté, saisi par l'API (supervision) et absent du formulaire ; renvoyé
+  // tel quel, sans quoi l'enregistrement de la fiche l'efface et l'incident sort du MTTD.
+  keep: r => ({ occurredAt: r.occurredAt }),
   columns: [
     { h: 'Priorité', v: r => <span className={'badge ' + r.priority}>{r.priority}</span> },
     { h: 'Service', v: r => r.affectedService || '—' },
