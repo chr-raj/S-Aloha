@@ -24,21 +24,28 @@ public class RelationProposalsController(AppDbContext db, PerimeterAccess access
         return ids.Count == 0 ? null : db.RelationProposals.Where(r => ids.Contains(r.PerimeterId));
     }
 
-    private static object Side(DiscoveredAsset a) => new
+    // MatchedCiId n'est remis à zéro qu'au scan suivant : un CI déplacé entre-temps vers un
+    // périmètre que l'appelant ne voit pas ne doit pas être décrit (PER-05).
+    private static object Side(DiscoveredAsset a, PerimeterScope scope) => new
     {
         a.Id, a.Hostname, a.IpAddress, a.Status,
-        Ci = a.MatchedCi is null ? null : new { a.MatchedCi.Id, a.MatchedCi.Reference, a.MatchedCi.Title, a.MatchedCi.Status }
+        Ci = a.MatchedCi is null || !scope.Sees(a.MatchedCi.PerimeterId) ? null
+            : new { a.MatchedCi.Id, a.MatchedCi.Reference, a.MatchedCi.Title, a.MatchedCi.Status }
     };
 
-    /// <summary>Les deux actifs rapprochés de CI non retirés : la relation peut entrer dans la CMDB.</summary>
+    /// <summary>
+    /// Les deux actifs rapprochés de CI non retirés du périmètre de la proposition : la relation
+    /// peut entrer dans la CMDB (PER-07 : un CI déplacé ne se relie plus depuis l'ancien périmètre).
+    /// </summary>
     private static bool Ready(RelationProposal r) =>
-        r.SourceAsset?.MatchedCi is { Status: not "Retiré" } && r.TargetAsset?.MatchedCi is { Status: not "Retiré" }
+        r.SourceAsset?.MatchedCi is { Status: not "Retiré" } s && r.TargetAsset?.MatchedCi is { Status: not "Retiré" } t
+        && s.PerimeterId == r.PerimeterId && t.PerimeterId == r.PerimeterId
         && r.SourceAsset.Status == DiscoveredAsset.Reconciled && r.TargetAsset.Status == DiscoveredAsset.Reconciled;
 
-    private static object View(RelationProposal r) => new
+    private static object View(RelationProposal r, PerimeterScope scope) => new
     {
         r.Id, r.PerimeterId, r.Type, r.Reason, r.Status, r.CreatedAt, r.LastSeenAt, r.DecidedAt, r.DecidedBy, r.RelationId,
-        Source = Side(r.SourceAsset!), Target = Side(r.TargetAsset!), Ready = Ready(r)
+        Source = Side(r.SourceAsset!, scope), Target = Side(r.TargetAsset!, scope), Ready = Ready(r)
     };
 
     private static IQueryable<RelationProposal> WithAssets(IQueryable<RelationProposal> q) =>
@@ -51,7 +58,8 @@ public class RelationProposalsController(AppDbContext db, PerimeterAccess access
         if (!string.IsNullOrEmpty(status)) query = query.Where(r => r.Status == status);
         if (asset is not null) query = query.Where(r => r.SourceAssetId == asset || r.TargetAssetId == asset);
         var list = await WithAssets(query.AsNoTracking()).OrderByDescending(r => r.LastSeenAt).Take(500).ToListAsync();
-        return Ok(list.Select(View));
+        var scope = await access.GetAsync();
+        return Ok(list.Select(r => View(r, scope)));
     }
 
     [HttpPost("{id:int}/accept")]
@@ -74,7 +82,7 @@ public class RelationProposalsController(AppDbContext db, PerimeterAccess access
         }
         (r.Status, r.RelationId, r.DecidedAt, r.DecidedBy) = (RelationProposal.Accepted, relation.Id, DateTime.UtcNow, User.Identity?.Name);
         await db.SaveChangesAsync();
-        return Ok(View(r));
+        return Ok(View(r, await access.GetAsync()));
     }
 
     [HttpPost("{id:int}/dismiss")]
@@ -86,6 +94,6 @@ public class RelationProposalsController(AppDbContext db, PerimeterAccess access
         if (r.Status != RelationProposal.Proposed) return BadRequest(new { message = $"Proposition déjà {r.Status.ToLowerInvariant()}." });
         (r.Status, r.DecidedAt, r.DecidedBy) = (RelationProposal.Dismissed, DateTime.UtcNow, User.Identity?.Name);
         await db.SaveChangesAsync();
-        return Ok(View(r));
+        return Ok(View(r, await access.GetAsync()));
     }
 }
