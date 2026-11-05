@@ -431,6 +431,42 @@ public class DiscoveryTests(ApiFixture api)
         Assert.Contains("port 6379", Str(db, "reason"));
     }
     [Fact]
+    public async Task PER_07_une_relation_proposee_ne_decrit_ni_ne_relie_un_CI_deplace_vers_un_autre_perimetre()
+    {
+        var (a, admin, manager) = await Perimeter("per07r");
+        var b = Id(await Json(await admin.PostAsJsonAsync("/api/admin/perimeters", new { name = "Site per07r-b" })));
+        var hostCi = await Json(await admin.PostAsJsonAsync("/api/configuration-items", Server("pve-per07r", a, serial: "SN-PER07R-H")));
+        var vmCi = await Json(await admin.PostAsJsonAsync("/api/configuration-items", Server("vm-per07r", a, serial: "SN-PER07R-V")));
+        var cred = await Json(await admin.PostAsJsonAsync("/api/discovery/credentials",
+            new { name = "Jeton", credentialType = "ProxmoxToken", username = "inventaire@pve!saloha", secret = "s", perimeterId = a }));
+        const string target = "https://pve-per07r.test:8006";
+        var job = await Json(await manager.PostAsJsonAsync("/api/discovery/jobs",
+            new { name = "Proxmox per07r", scanType = "Proxmox", targetRange = target, credentialId = Id(cred), perimeterId = a }));
+        FakeCollector.Observations[target] =
+        [
+            new("Proxmox", IpAddress: "10.88.0.1", Hostname: "pve-per07r", SerialNumber: "SN-PER07R-H", Type: "Serveur"),
+            new("Proxmox", Hostname: "vm-per07r", SerialNumber: "SN-PER07R-V", Type: "Serveur", HostedBy: "pve-per07r"),
+        ];
+        await RunAndWait(manager, Id(job));
+        async Task<JsonElement> Proposal() => (await Json(await manager.GetAsync("/api/discovery/relations?status=Proposée"))).EnumerateArray()
+            .Single(r => r.GetProperty("perimeterId").GetInt32() == a);
+        Assert.True((await Proposal()).GetProperty("ready").GetBoolean());
+
+        // La VM passe au périmètre B, que le gestionnaire de A ne voit pas.
+        await Json(await admin.PutAsJsonAsync($"/api/configuration-items/{Id(vmCi)}", Server("vm-per07r", b, serial: "SN-PER07R-V")));
+        Assert.Equal(HttpStatusCode.NotFound, (await manager.GetAsync($"/api/configuration-items/{Id(vmCi)}")).StatusCode);
+        var proposal = await Proposal();
+        Assert.Equal(JsonValueKind.Null, proposal.GetProperty("target").GetProperty("ci").ValueKind);
+        Assert.Equal(Id(hostCi), Id(proposal.GetProperty("source").GetProperty("ci")));
+        Assert.False(proposal.GetProperty("ready").GetBoolean());
+        var refused = await manager.PostAsync($"/api/discovery/relations/{Id(proposal)}/accept", null);
+        Assert.Equal(HttpStatusCode.BadRequest, refused.StatusCode);
+        Assert.DoesNotContain("vm-per07r", await refused.Content.ReadAsStringAsync());
+        await using (var db = api.Database())
+            Assert.False(await db.CiRelationships.AnyAsync(r => r.SourceId == Id(hostCi) && r.TargetId == Id(vmCi)));
+    }
+
+    [Fact]
     public async Task PER_07_un_actif_rapproche_ne_suit_pas_son_CI_deplace_vers_un_autre_perimetre()
     {
         var (a, admin, manager) = await Perimeter("per07d");
