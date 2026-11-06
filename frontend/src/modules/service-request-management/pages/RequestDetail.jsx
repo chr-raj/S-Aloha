@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { api, getUser } from '../../../api'
 import RecordDetail from '../../../core/components/RecordDetail'
 import { hrefOf } from '../../../core/itemTypes'
+import useManagerOn from '../../../core/useManagerOn'
 import useRequestConfig from '../useRequestConfig'
 
 /**
  * REQ-12 : une demande qui révèle un besoin non standard se requalifie en changement (ou en
  * incident) relié ; la demande est annulée avec ce motif. Demandeur ou gestionnaire, avant
- * le traitement.
+ * le traitement. Gestionnaire du périmètre de la demande, comme l'API (PER-06).
  */
 export function Requalify({ request }) {
   const [target, setTarget] = useState('change')
@@ -16,7 +17,8 @@ export function Requalify({ request }) {
   const [error, setError] = useState('')
   const nav = useNavigate()
   const user = getUser()
-  const allowed = ['Admin', 'Manager'].includes(user?.role) || user?.username?.toLowerCase() === request.createdBy?.toLowerCase()
+  const manager = useManagerOn(request.perimeterId)
+  const allowed = manager || user?.username?.toLowerCase() === request.createdBy?.toLowerCase()
   if (!allowed || !['Soumise', 'Approuvée'].includes(request.status)) return null
   const go = () => api.requests.requalify(request.id, { target, reason })
     .then(r => nav(hrefOf(r.target.type, r.target.id))).catch(e => setError(e.message))
