@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SAloha.Api.Core.Auth;
 using SAloha.Api.Core.Data;
 using SAloha.Api.Core.Links;
 using SAloha.Api.Core.Records;
@@ -138,6 +139,15 @@ public class ChangesController(AppDbContext db) : RecordController<Change, Chang
     {
         // Règles vérifiées à l'entrée du statut : un changement déjà dans ce statut avant elles reste modifiable.
         var entering = e.Status != status;
+        // § 4 : Planifié → Mis en œuvre et Mis en œuvre → Clos, par le responsable (membre du groupe
+        // responsable) ou un gestionnaire. Responsable d'avant la modification : se désigner et
+        // transiter d'un même envoi ne suffit pas (comme REQ-25, #249).
+        if (entering && status is ("Mis en œuvre" or "Clos") && e.Id != 0 && !IsManager)
+        {
+            var owner = Db.Entry(e);
+            if (!User.Designates(owner.Property(x => x.OwnerType).OriginalValue, owner.Property(x => x.OwnerId).OriginalValue))
+                return "Seul le responsable du changement ou un gestionnaire le met en œuvre et le clôt.";
+        }
         // CHG-14 : dates réelles.
         if (entering && status == "Mis en œuvre" && e.ActualStart is null)
             return "Renseigner le début réel de la mise en œuvre.";

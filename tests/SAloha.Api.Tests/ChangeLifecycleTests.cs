@@ -26,23 +26,24 @@ public class ChangeLifecycleTests(ApiFixture api)
     private static readonly DateTime Slot = DateTime.UtcNow.Date.AddDays(60).AddHours(20);
 
     private static object Change(string type, string? status, DateTime? actualStart = null, DateTime? actualEnd = null,
-        string? outcome = null, string? pir = null) => new
+        string? outcome = null, string? pir = null, string? ownerType = null, string? ownerId = null) => new
     {
         title = "CHG cycle", changeType = type, risk = "Moyen", status, outcome, pirNotes = pir,
+        ownerType, ownerId, ownerDisplayName = ownerId,
         plannedStart = Slot, plannedEnd = Slot.AddHours(2), implementationPlan = "Appliquer", backoutPlan = "Restaurer",
         actualStart, actualEnd
     };
 
     /// <summary>Changement Normal ou Urgent conduit jusqu'à Planifié : demandeur, CI relié, autorisé par un autre gestionnaire.</summary>
-    private async Task<(HttpClient Requester, string Url)> Planned(string type, string tag)
+    private async Task<(HttpClient Requester, string Url)> Planned(string type, string tag, string? ownerType = null, string? ownerId = null)
     {
         var requester = api.Client("Manager", $"demandeur.{tag}");
-        var c = await Json(await requester.PostAsJsonAsync("/api/changes", Change(type, null)));
+        var c = await Json(await requester.PostAsJsonAsync("/api/changes", Change(type, null, ownerType: ownerType, ownerId: ownerId)));
         var url = $"/api/changes/{Id(c)}";
         await ChangeTestData.LinkCiAsync(requester, Id(c));
-        await Json(await requester.PutAsJsonAsync(url, Change(type, "Évalué")));
-        await Json(await api.Client("Manager", $"autorite.{tag}").PutAsJsonAsync(url, Change(type, "Autorisé")));
-        await Json(await requester.PutAsJsonAsync(url, Change(type, "Planifié")));
+        await Json(await requester.PutAsJsonAsync(url, Change(type, "Évalué", ownerType: ownerType, ownerId: ownerId)));
+        await Json(await api.Client("Manager", $"autorite.{tag}").PutAsJsonAsync(url, Change(type, "Autorisé", ownerType: ownerType, ownerId: ownerId)));
+        await Json(await requester.PutAsJsonAsync(url, Change(type, "Planifié", ownerType: ownerType, ownerId: ownerId)));
         return (requester, url);
     }
 
@@ -101,5 +102,33 @@ public class ChangeLifecycleTests(ApiFixture api)
         var (u, urgent) = await Planned("Urgent", "chg15u");
         await Json(await u.PutAsJsonAsync(urgent, Change("Urgent", "Mis en œuvre", Slot)));
         Assert.Contains("revue post-implémentation", await Refused(await u.PutAsJsonAsync(urgent, Change("Urgent", "Clos", Slot, Slot.AddHours(1), "Réussi"))));
+    }
+
+    [Fact]
+    public async Task CHG_14_seuls_le_responsable_et_un_gestionnaire_mettent_en_oeuvre_et_closent()
+    {
+        object Body(string status, string? ownerId = "resp.chg259", string ownerType = "User", DateTime? end = null) =>
+            Change("Normal", status, Slot, end, end is null ? null : "Réussi", ownerType: ownerType, ownerId: ownerId);
+        var (_, url) = await Planned("Normal", "chg259", "User", "resp.chg259");
+        var tiers = api.Client("User", "tiers.chg259");
+        var owner = api.Client("User", "resp.chg259");
+
+        // Un User tiers ne met pas en œuvre (§ 4 : Responsable, Manager), même en se désignant dans le même envoi.
+        Assert.Contains("responsable du changement", await Refused(await tiers.PutAsJsonAsync(url, Body("Mis en œuvre"))));
+        Assert.Contains("responsable du changement", await Refused(await tiers.PutAsJsonAsync(url, Body("Mis en œuvre", "tiers.chg259"))));
+        Assert.Equal("Planifié", (await Json(await owner.GetAsync(url))).GetProperty("status").GetString());
+        // Le responsable, oui.
+        await Json(await owner.PutAsJsonAsync(url, Body("Mis en œuvre")));
+        // Ni la clôture par un tiers.
+        Assert.Contains("responsable du changement", await Refused(await tiers.PutAsJsonAsync(url, Body("Clos", end: Slot.AddHours(1)))));
+        Assert.Equal("Clos", (await Json(await owner.PutAsJsonAsync(url, Body("Clos", end: Slot.AddHours(1))))).GetProperty("status").GetString());
+
+        // Responsable de type groupe : un membre du groupe met en œuvre.
+        var (_, grp) = await Planned("Normal", "chg259g", "Group", "GRP-CHG259");
+        await Json(await api.Client("User", "membre.chg259", "GRP-CHG259").PutAsJsonAsync(grp, Body("Mis en œuvre", "GRP-CHG259", "Group")));
+
+        // Un gestionnaire du périmètre, qui n'est pas le responsable, oui.
+        var (_, m) = await Planned("Normal", "chg259m", "User", "resp.chg259");
+        await Json(await api.Client("Manager", "gest.chg259").PutAsJsonAsync(m, Body("Mis en œuvre")));
     }
 }
