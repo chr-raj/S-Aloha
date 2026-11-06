@@ -94,8 +94,8 @@ les conditions de statut.
 | Évalué → Rejeté | Manager | Motif | | ✅ |
 | Autorisé → Planifié | Tous | Début et fin planifiés ; hors période de gel (sauf Urgent) | Inscrit au calendrier | ✅ |
 | Autorisé, Planifié → Évalué | Auto | Modification d'un champ d'évaluation par un User, ou par un gestionnaire dans les cas de CHG-07 (demandeur, CAB, conflit) | Autorisation effacée | ✅ |
-| Planifié → Mis en œuvre | Responsable, Manager | Début réel | `ActualStart` | ✅ CHG-14 |
-| Mis en œuvre → Clos | Responsable, Manager | Résultat ; fin réelle ; revue si requise (CHG-15) | `ClosedAt` | ✅ |
+| Planifié → Mis en œuvre | Responsable, Manager | Début réel | `ActualStart` | ✅ CHG-14 (qui : responsable d'avant la modification, membre du groupe responsable ou gestionnaire, #259) |
+| Mis en œuvre → Clos | Responsable, Manager | Résultat ; fin réelle ; revue si requise (CHG-15) | `ClosedAt` | ✅ (qui : comme la mise en œuvre, #259) |
 | Rejeté, Clos → … | — | Statuts finaux | | ✅ CHG-11 |
 
 ## 5. Règles de gestion

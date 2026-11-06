@@ -43,12 +43,16 @@ public class ItilModulesTests(ApiFixture api)
     private static readonly DateTime Slot = DateTime.UtcNow.Date.AddDays(2).AddHours(20);
 
     private static object Change(string title, string type, string? status = null, string? outcome = null,
-        string risk = "Moyen") => new
+        string risk = "Moyen", string? owner = null) => new
     {
         title, status, changeType = type, risk, outcome, plannedStart = Slot, plannedEnd = Slot.AddHours(2),
+        ownerType = owner is null ? null : "User", ownerId = owner, ownerDisplayName = owner,
         implementationPlan = "Appliquer", backoutPlan = "Restaurer", rejectionReason = "Hors périmètre",
         actualStart = Slot, actualEnd = Slot.AddHours(1)   // CHG-14
     };
+
+    /// <summary>Utilisateur par défaut de <c>api.Client("User")</c>.</summary>
+    private const string Me = "hery.rakoto";
 
     /// <summary>CHG-26 : un changement Standard se crée depuis un modèle.</summary>
     private static object StandardChange(string title, int model) => new
@@ -149,10 +153,11 @@ public class ItilModulesTests(ApiFixture api)
         Assert.Equal(HttpStatusCode.Forbidden, (await Put(user, "/api/changes", Id(normal), Change("Normal", "Normal", "Autorisé"))).StatusCode);
 
         await Json(await Put(api.Client("Manager", "chef.itil"), "/api/changes", Id(normal), Change("Normal", "Normal", "Autorisé")));   // CHG-21 : un autre que le demandeur
-        await Json(await Put(user, "/api/changes", Id(normal), Change("Normal", "Normal", "Planifié")));
-        await Json(await Put(user, "/api/changes", Id(normal), Change("Normal", "Normal", "Mis en œuvre")));
-        Assert.Equal(HttpStatusCode.BadRequest, (await Put(user, "/api/changes", Id(normal), Change("Normal", "Normal", "Clos"))).StatusCode);
-        await Json(await Put(user, "/api/changes", Id(normal), Change("Normal", "Normal", "Clos", "Réussi")));
+        // § 4 : la mise en œuvre et la clôture reviennent au responsable du changement, ici le demandeur.
+        await Json(await Put(user, "/api/changes", Id(normal), Change("Normal", "Normal", "Planifié", owner: Me)));
+        await Json(await Put(user, "/api/changes", Id(normal), Change("Normal", "Normal", "Mis en œuvre", owner: Me)));
+        Assert.Equal(HttpStatusCode.BadRequest, (await Put(user, "/api/changes", Id(normal), Change("Normal", "Normal", "Clos", owner: Me))).StatusCode);
+        await Json(await Put(user, "/api/changes", Id(normal), Change("Normal", "Normal", "Clos", "Réussi", owner: Me)));
 
         var schedule = await Json(await user.GetAsync("/api/changes/schedule"));
         Assert.Contains(schedule.EnumerateArray(), c => Id(c) == Id(standard));
@@ -325,9 +330,9 @@ public class ItilModulesTests(ApiFixture api)
             (await Put(user, "/api/incidents", Id(i), Incident("Invariant", "Résolu", ""))).StatusCode);
 
         var c = await Create(user, "/api/changes", StandardChange("Invariant", await ChangeTestData.StandardModelIdAsync(api)));
-        await Json(await Put(user, "/api/changes", Id(c), Change("Invariant", "Standard", "Planifié", null, risk: "Faible")));
-        await Json(await Put(user, "/api/changes", Id(c), Change("Invariant", "Standard", "Mis en œuvre", null, risk: "Faible")));
-        await Json(await Put(user, "/api/changes", Id(c), Change("Invariant", "Standard", "Clos", "Réussi", risk: "Faible")));
+        await Json(await Put(user, "/api/changes", Id(c), Change("Invariant", "Standard", "Planifié", null, risk: "Faible", owner: Me)));
+        await Json(await Put(user, "/api/changes", Id(c), Change("Invariant", "Standard", "Mis en œuvre", null, risk: "Faible", owner: Me)));
+        await Json(await Put(user, "/api/changes", Id(c), Change("Invariant", "Standard", "Clos", "Réussi", risk: "Faible", owner: Me)));
         // SOC-15 : un changement clos ne se modifie que par un gestionnaire ; l'invariant tient aussi pour lui.
         Assert.Equal(HttpStatusCode.Forbidden,
             (await Put(user, "/api/changes", Id(c), Change("Invariant", "Standard", "Clos", "Réussi", risk: "Faible"))).StatusCode);
