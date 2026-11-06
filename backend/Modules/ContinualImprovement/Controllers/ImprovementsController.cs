@@ -70,6 +70,19 @@ public class ImprovementsController(AppDbContext db) : RecordController<Improvem
     {
         if (status is "En cours" or "Réalisée" && e.ValidatedAt is null)
             return "L'amélioration doit d'abord être validée par un gestionnaire.";
+        // CSI-11, § 4 : engager l'amélioration et la déclarer réalisée reviennent à son porteur
+        // (membre du groupe porteur) ou à un gestionnaire. Porteur d'avant la modification : se
+        // désigner et transiter d'un même envoi ne suffit pas (comme REQ-25, #249).
+        var entering = e.Status != status;
+        if (entering && status is ("En cours" or "Réalisée") && e.Id != 0 && !IsManager)
+        {
+            var owner = Db.Entry(e);
+            if (!User.Designates(owner.Property(x => x.OwnerType).OriginalValue, owner.Property(x => x.OwnerId).OriginalValue))
+                return "Seul le porteur de l'amélioration ou un gestionnaire l'engage et la déclare réalisée.";
+        }
+        // CSI-11, § 4 : une amélioration s'engage avec un porteur.
+        if (entering && status == "En cours" && string.IsNullOrWhiteSpace(e.OwnerId))
+            return "Désigner le porteur de l'amélioration avant de l'engager.";
         // CSI-12 : valider, c'est arbitrer — valeur et effort notés. Contrôlé à l'entrée dans
         // Validée seulement : une amélioration validée avant la règle reste modifiable.
         if (status == "Validée" && e.Status != "Validée" && (e.Value is null || e.Effort is null))

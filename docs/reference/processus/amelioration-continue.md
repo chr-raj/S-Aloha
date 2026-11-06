@@ -82,8 +82,8 @@ stateDiagram-v2
 |---|---|---|---|---|
 | — → Proposée | Tous | Titre, étape | Référence | ✅ |
 | Proposée → Validée | Manager | Valeur attendue, mesure de départ et mesure cible renseignées | `ValidatedAt`, `ValidatedBy` | ✅ |
-| Validée → En cours | Porteur, Manager | Validée ; porteur renseigné | | ✅ / 🔜 |
-| En cours → Réalisée | Porteur, Manager | Résultat constaté ; étape ≥ 6 | `CompletedAt` | ✅ (résultat) / 🔜 (étape) |
+| Validée → En cours | Porteur, Manager | Validée ; porteur renseigné | | ✅ (porteur d'avant la modification, membre du groupe porteur ou gestionnaire ; porteur exigé, #264) |
+| En cours → Réalisée | Porteur, Manager | Résultat constaté ; étape ≥ 6 | `CompletedAt` | ✅ (résultat ; étape : CSI-16 ; qui : comme l'engagement, #264) |
 | Proposée, Validée, En cours → Abandonnée | Manager | Motif | Validation retirée | ✅ |
 | Abandonnée → Proposée | Tous | | Nouvelle validation nécessaire | ✅ |
 | Réalisée → … | — | Statut final | | 🔜 CSI-11 |
@@ -141,7 +141,7 @@ ouvertes et contrôles de durabilité arrivés à leur date (Mon travail, CSI-15
 | Route | Policy | Rôle |
 |---|---|---|
 | `GET /api/improvements` (filtres `status`, `q`, `owner`), `GET /api/improvements/{id}` | User | Registre, fiche |
-| `POST /api/improvements`, `PUT /api/improvements/{id}` | User (Validée/Abandonnée : Manager) | Proposition, avancement, transitions |
+| `POST /api/improvements`, `PUT /api/improvements/{id}` | User (Validée/Abandonnée : Manager ; En cours/Réalisée : porteur ou Manager) | Proposition, avancement, transitions |
 | `DELETE /api/improvements/{id}` | Admin | Suppression |
 | `POST /api/improvements/{id}/follow-up` (`holds`, `note`) | Porteur, Manager | Contrôle de durabilité (CSI-15) |
 
