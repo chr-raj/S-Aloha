@@ -115,4 +115,63 @@ public class ImprovementLifecycleTests(ApiFixture api)
         Assert.Single((await Json(await m.GetAsync($"/api/links?type=problem&id={Id(p)}"))).EnumerateArray(),
             l => l.GetProperty("type").GetString() == "improvement");
     }
+
+    [Fact]
+    public async Task CSI_11_le_porteur_ou_un_gestionnaire_engage_et_realise_porteur_exige()
+    {
+        var m = api.Client("Manager", "chef.csi11p");
+        object Body(string status, string? owner = "porteur.csi11p", int step = 5, string? outcome = null) => new
+        {
+            title = "Supervision des sauvegardes", step, priority = "Moyenne", status, benefit = "b", baseline = "5 j", target = "2 j",
+            value = 2, effort = 2, outcome, ownerType = owner is null ? null : "User", ownerId = owner, ownerDisplayName = owner
+        };
+        async Task<string> Validated(string? owner = "porteur.csi11p")
+        {
+            var a = await Json(await m.PostAsJsonAsync("/api/improvements", Body("Proposée", owner)));
+            var url = $"/api/improvements/{Id(a)}";
+            await Json(await m.PutAsJsonAsync(url, Body("Validée", owner)));
+            return url;
+        }
+        async Task<string> Refused(HttpResponseMessage res)
+        {
+            var body = await res.Content.ReadAsStringAsync();
+            Assert.True(res.StatusCode == HttpStatusCode.BadRequest, $"Attendu 400, reçu {(int)res.StatusCode} : {body}");
+            return body;
+        }
+        var tiers = api.Client("User", "tiers.csi11p");
+        var porteur = api.Client("User", "porteur.csi11p");
+
+        // Un User tiers n'engage pas l'amélioration d'un autre (§ 4 : Porteur, Manager), même en se désignant.
+        var url = await Validated();
+        Assert.Contains("porteur", await Refused(await tiers.PutAsJsonAsync(url, Body("En cours"))));
+        Assert.Contains("porteur", await Refused(await tiers.PutAsJsonAsync(url, Body("En cours", "tiers.csi11p"))));
+        Assert.Equal("Validée", (await Json(await m.GetAsync(url))).GetProperty("status").GetString());
+        // Le porteur, oui ; puis un tiers ne la déclare pas réalisée, le porteur si.
+        await Json(await porteur.PutAsJsonAsync(url, Body("En cours")));
+        Assert.Contains("porteur", await Refused(await tiers.PutAsJsonAsync(url, Body("Réalisée", step: 6, outcome: "fait"))));
+        Assert.Equal("Réalisée", (await Json(await porteur.PutAsJsonAsync(url, Body("Réalisée", step: 6, outcome: "fait")))).GetProperty("status").GetString());
+
+        // Porteur de type groupe : un membre engage l'amélioration.
+        var g = await Json(await m.PostAsJsonAsync("/api/improvements", new
+        {
+            title = "Revue des accès", step = 2, priority = "Moyenne", benefit = "b", baseline = "5 j", target = "2 j",
+            value = 2, effort = 2, ownerType = "Group", ownerId = "GRP-CSI11P", ownerDisplayName = "GRP-CSI11P"
+        }));
+        var gurl = $"/api/improvements/{Id(g)}";
+        object Grp(string status) => new
+        {
+            title = "Revue des accès", step = 2, priority = "Moyenne", status, benefit = "b", baseline = "5 j", target = "2 j",
+            value = 2, effort = 2, ownerType = "Group", ownerId = "GRP-CSI11P", ownerDisplayName = "GRP-CSI11P"
+        };
+        await Json(await m.PutAsJsonAsync(gurl, Grp("Validée")));
+        await Json(await api.Client("User", "membre.csi11p", "GRP-CSI11P").PutAsJsonAsync(gurl, Grp("En cours")));
+
+        // Un gestionnaire qui n'est pas le porteur, oui.
+        await Json(await api.Client("Manager", "gest.csi11p").PutAsJsonAsync(await Validated(), Body("En cours")));
+
+        // « Porteur renseigné » : sans porteur, pas d'engagement, même par un gestionnaire.
+        var none = await Validated(null);
+        Assert.Contains("porteur", await Refused(await m.PutAsJsonAsync(none, Body("En cours", null))));
+        await Json(await m.PutAsJsonAsync(none, Body("En cours")));
+    }
 }

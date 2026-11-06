@@ -192,7 +192,8 @@ public class ValidationRulesTests(ApiFixture api)
         object Dto(string? status, int step = 1, bool measured = true, string? abandon = null, string? outcome = null) => new
         {
             title = "CSI", step, priority = "Moyenne", status, outcome, abandonReason = abandon,
-            benefit = measured ? "Délai réduit" : "", baseline = measured ? "5 j" : "", target = measured ? "2 j" : "", value = 2, effort = 2
+            benefit = measured ? "Délai réduit" : "", baseline = measured ? "5 j" : "", target = measured ? "2 j" : "", value = 2, effort = 2,
+            ownerType = "User", ownerId = "porteur.csi13", ownerDisplayName = "porteur.csi13"   // § 4 : porteur renseigné pour l'engager
         };
         var a = await Json(await m.PostAsJsonAsync("/api/improvements", Dto(null, measured: false)));
         var url = $"/api/improvements/{Id(a)}";
