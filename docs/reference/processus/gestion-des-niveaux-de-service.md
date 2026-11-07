@@ -130,9 +130,9 @@ ci-dessous sont permises (SOC-05).
 | Lien | Sens | Règle | Statut |
 |---|---|---|---|
 | Service → SLA | Engagements | SLM-02 | ✅ |
-| Incident → Service | Mesure du respect | SLM-10, SLM-20 | ✅ (service) / 🔜 (mesure) |
-| CI → Service | Services supportés | CFG-21 | 🔜 |
-| Demande → Service | Modèles de demande par service | REQ-20 | 🔜 |
+| Incident → Service | Mesure du respect | SLM-10, SLM-20 | ✅ |
+| CI → Service | Services supportés | CFG-21 | ✅ |
+| Demande → Service | Modèles de demande par service | REQ-20 | ✅ |
 | SLA → Amélioration | Écart à la cible | SLM-23, CSI-20 | ✅ |
 
 ## 8. Console et indicateurs
