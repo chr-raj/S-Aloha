@@ -4,7 +4,7 @@ import { dateFr } from '../../../core/fields'
 import PartTable from './PartTable'
 import BurndownChart from './BurndownChart'
 import { componentsOf } from '../config'
-import { isLead } from '../rights'
+import useIsLead from '../rights'
 
 export const STATUSES = ['À faire', 'En cours', 'En revue', 'Terminé']
 const TYPES = ['User story', 'Tâche', 'Bogue']
@@ -26,6 +26,7 @@ const useSprints = (project) => {
 /** Backlog (PRJ-14) : éléments priorisés, tout rôle les crée ; ↑ ↓ change la priorité. */
 export function Backlog({ project, onChanged }) {
   const sprints = useSprints(project)
+  const lead = useIsLead(project)
   const client = api.projects.parts(project.id, 'workitems')
   const sprintName = (id) => sprints?.find(s => s.id === id)?.name
   const move = (row, rows, delta, reload) => {
@@ -38,7 +39,7 @@ export function Backlog({ project, onChanged }) {
   return (
     <PartTable project={project} segment="workitems" title="Backlog" onChanged={onChanged}
       hint="User stories, tâches et bogues, du plus prioritaire au moins prioritaire. Tout membre de l'équipe peut en ajouter."
-      canWrite canDelete={isLead(project)} empty="Backlog vide : ajoutez une première user story."
+      canWrite canDelete={lead} empty="Backlog vide : ajoutez une première user story."
       actions={(row, reload, rows) => <>
         <button className="btn ghost small" onClick={() => move(row, rows, -1, reload)} aria-label={`Monter ${row.title}`}>↑</button>{' '}
         <button className="btn ghost small" onClick={() => move(row, rows, 1, reload)} aria-label={`Descendre ${row.title}`}>↓</button>{' '}
@@ -114,7 +115,7 @@ export function Board({ project, onChanged }) {
 
 /** Sprints (PRJ-12) et burndown (PRJ-13). */
 export function Sprints({ project, onChanged }) {
-  const lead = isLead(project)
+  const lead = useIsLead(project)
   const hasBurndown = componentsOf(project).includes('burndown')
   const [selected, setSelected] = useState(null)
   const [burn, setBurn] = useState(null)

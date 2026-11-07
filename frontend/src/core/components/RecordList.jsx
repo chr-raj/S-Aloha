@@ -1,13 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { getUser } from '../../api'
 import RecordForm, { toForm, toPayload, applies } from './RecordForm'
 import StatusBadge from './StatusBadge'
 import PerimeterSelect from './PerimeterSelect'
 import usePerimeters from '../usePerimeters'
+import useManagesPerimeter from '../useManagesPerimeter'
 import TypingSuggestions from './TypingSuggestions'
-
-const isManagerRole = () => ['Admin', 'Manager'].includes(getUser()?.role)
 
 /** Formulaire de création : champs de la configuration, statut initial si le module le permet. */
 function NewRecord({ config, onCreated }) {
@@ -55,7 +53,10 @@ export default function RecordList({ config, intro }) {
   const [showForm, setShowForm] = useState(false)
   const [error, setError] = useState('')
   const nav = useNavigate()
-  const canCreate = !config.noCreate && (!config.managerOnly || isManagerRole())
+  // PER-06 : l'API tranche sur le périmètre choisi à la création ; le bouton se montre à qui
+  // gère au moins un périmètre, pas selon le rôle AD.
+  const manages = useManagesPerimeter()
+  const canCreate = !config.noCreate && (!config.managerOnly || manages)
 
   const load = () => config.api.list({
     ...(status && { status }), ...(q && { q }), ...(mine && { owner: 'me' }),

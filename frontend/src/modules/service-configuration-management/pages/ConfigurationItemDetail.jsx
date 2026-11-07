@@ -4,6 +4,7 @@ import { api, getUser } from '../../../api'
 import { dateFr, dateTimeFr } from '../../../core/fields'
 import RecordDetail from '../../../core/components/RecordDetail'
 import useManagerOn from '../../../core/useManagerOn'
+import useManagesPerimeter from '../../../core/useManagesPerimeter'
 import { ciConfig, RELATION_TYPES } from '../config'
 import { Sources, StagingBadge } from '../components/Discovery'
 
@@ -169,12 +170,13 @@ export function Verification({ ci, onSaved }) {
  * CFG-40 : actifs de la découverte rapprochés de ce CI (gestionnaires) — d'où vient son
  * identification technique, et quand il a été vu pour la dernière fois.
  */
-function DiscoveryTrace({ ci }) {
+export function DiscoveryTrace({ ci }) {
   const [assets, setAssets] = useState([])
-  const isManager = ['Admin', 'Manager'].includes(getUser()?.role)
+  // Le sas se filtre sur les périmètres gérés : gestionnaire d'au moins un, comme l'API.
+  const isManager = useManagesPerimeter()
   useEffect(() => {
     if (isManager) api.discovery.staging.list({ ci: ci.id }).then(setAssets).catch(() => setAssets([]))
-  }, [ci.id])
+  }, [ci.id, isManager])
   if (assets.length === 0) return null
   return (
     <div className="card" style={{ marginTop: 16 }}>

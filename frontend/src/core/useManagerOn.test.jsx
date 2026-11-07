@@ -6,6 +6,7 @@ import Attachments from './components/Attachments'
 import { Lifecycle } from '../modules/knowledge-management/pages/ArticleDetail'
 import { FollowUp } from '../modules/continual-improvement/pages/ImprovementDetail'
 import { Verification } from '../modules/service-configuration-management/pages/ConfigurationItemDetail'
+import { BusinessCase } from '../modules/project-management/components/Overview'
 
 let role = 'User'
 let perimeters = []
@@ -59,6 +60,19 @@ describe('Décisions de gestionnaire d\'une fiche (PER-06)', () => {
     render(<Attachments type="incident" id={7} perimeterId={SIEGE} />)
     await screen.findByText('capture.pdf')
     expect(!!screen.queryByText('Retirer')).toBe(manager)
+    cleanup()
+
+    // PRJ-04 : chef de projet ou gestionnaire du périmètre du projet (#268).
+    render(<BusinessCase project={{ id: 8, status: 'En cours', components: 'business-case', ...owner }} onChanged={() => {}} />)
+    expect(!!screen.queryByText('Enregistrer')).toBe(manager)
+    expect(!!screen.queryByText(/Lecture seule/)).toBe(!manager)
+  })
+
+  it('PRJ-04 : le chef de projet garde la main sans être gestionnaire', () => {
+    as({ role: 'User', perimeters: [{ id: SIEGE, name: 'Siège', role: 'User' }] })
+    render(<BusinessCase project={{ id: 8, status: 'En cours', components: 'business-case', perimeterId: SIEGE,
+      ownerType: 'User', ownerId: 'Lova' }} onChanged={() => {}} />)
+    expect(screen.getByText('Enregistrer')).toBeTruthy()
   })
 
   it('liste non chargée : le rôle AD en repli', () => {
