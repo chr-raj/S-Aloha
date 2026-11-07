@@ -7,6 +7,9 @@ import StandardChanges from '../modules/change-enablement/pages/StandardChanges'
 import { Freezes } from '../modules/change-enablement/pages/ChangeSchedule'
 import RequestCatalog from '../modules/service-request-management/pages/RequestCatalog'
 import DiscoverySettings from '../modules/service-configuration-management/pages/DiscoverySettings'
+import { DiscoveryTrace } from '../modules/service-configuration-management/pages/ConfigurationItemDetail'
+import RecordList from './components/RecordList'
+import { serviceConfig } from '../modules/service-level-management/config'
 
 let role = 'User'
 let perimeters = []
@@ -17,7 +20,11 @@ vi.mock('../api', () => ({
     changeFreezes: { list: () => Promise.resolve([]) },
     requestCatalog: { list: () => Promise.resolve([]) },
     services: { list: () => Promise.resolve([]) },
-    discovery: { endOfLife: { list: () => Promise.resolve([]) } },
+    discovery: {
+      endOfLife: { list: () => Promise.resolve([]) },
+      staging: { list: () => Promise.resolve([{ id: 4, hostname: 'srv-fic-01', status: 'Rapproché', sources: 'nmap',
+        lastSeenAt: '2026-11-01T08:00:00Z' }]) },
+    },
   }
 }))
 vi.mock('./usePerimeters', () => ({ default: () => perimeters, perimeterName: () => '' }))
@@ -66,6 +73,26 @@ describe('Référentiels sans périmètre (PER-13)', () => {
     expect(!!document.querySelector('.sidebar a[href="/settings/categories"]')).toBe(shown)
     // Le référentiel NIS 2 reste à l'Admin.
     expect(document.querySelector('.sidebar a[href="/settings/nis2"]')).toBeNull()
+  })
+
+  // L'API tranche sur le périmètre choisi à la création (`ActOn`, puis `CanCreate`) ; le sas
+  // de découverte se filtre sur les périmètres gérés (#268).
+  it.each([
+    ['User AD, Manager du Siège', MANAGER_SIEGE, true],
+    ['Manager AD, User partout', USER_PARTOUT, false],
+  ])('%s : création dans un registre réservé et encadré « Découverte » d\'un CI', async (_, who, shown) => {
+    as(who)
+    render(<MemoryRouter><RecordList config={serviceConfig} /></MemoryRouter>)
+    await screen.findByText('Catalogue des services')
+    expect(!!screen.queryByText('+ Nouveau service')).toBe(shown)
+    cleanup()
+
+    render(<MemoryRouter><DiscoveryTrace ci={{ id: 6, perimeterId: 1 }} /></MemoryRouter>)
+    if (shown) expect(await screen.findByText('srv-fic-01')).toBeTruthy()
+    else {
+      await new Promise((r) => setTimeout(r, 0))
+      expect(screen.queryByText('srv-fic-01')).toBeNull()
+    }
   })
 
   it('liste non chargée : le rôle AD en repli', () => {

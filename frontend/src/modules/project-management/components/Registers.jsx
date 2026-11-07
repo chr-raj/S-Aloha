@@ -2,14 +2,14 @@ import React from 'react'
 import { api } from '../../../api'
 import { dateFr, dateTimeFr } from '../../../core/fields'
 import PartTable from './PartTable'
-import { isLead } from '../rights'
+import useIsLead from '../rights'
 
 const badge = (text, tone) => <span className={'badge t-' + tone}>{text}</span>
 const PHASE_TONE = { 'À venir': 'new', 'En cours': 'progress', 'Terminée': 'done' }
 
 /** Phases (cycle en V) ou étapes de gestion (PRINCE2) — PRJ-10, PRJ-20, PRJ-21. */
 export function Phases({ project, stages, onChanged }) {
-  const lead = isLead(project)
+  const lead = useIsLead(project)
   // PRJ-21 : seule l'étape courante (la première non terminée) se valide.
   const approve = (row, reload, rows) => stages && lead && row.id === rows.find(x => x.status !== 'Terminée')?.id && (
     <button className="btn small" onClick={() => api.projects.approveStage(project.id, row.id).then(() => { reload(); onChanged?.() })}
@@ -38,7 +38,7 @@ export function Phases({ project, stages, onChanged }) {
 }
 
 export function Milestones({ project, onChanged }) {
-  const lead = isLead(project)
+  const lead = useIsLead(project)
   const today = new Date().toISOString().slice(0, 10)
   return (
     <PartTable project={project} segment="milestones" title="Jalons" onChanged={onChanged}
@@ -63,7 +63,7 @@ const DELIVERABLE_TONE = { 'À produire': 'new', 'En cours': 'progress', 'Livré
 
 /** Livrables — PRJ-11 : seul le chef de projet ou un gestionnaire valide. */
 export function Deliverables({ project, onChanged }) {
-  const lead = isLead(project)
+  const lead = useIsLead(project)
   return (
     <PartTable project={project} segment="deliverables" title="Livrables" onChanged={onChanged}
       hint="À produire → En cours → Livré → Validé. La validation revient au chef de projet ou à un gestionnaire."
@@ -85,10 +85,11 @@ export function Deliverables({ project, onChanged }) {
 
 /** Registre des risques — PRJ-15 : score = probabilité × impact, critique à partir de 15. */
 export function Risks({ project, onChanged }) {
+  const lead = useIsLead(project)
   const scale = [1, 2, 3, 4, 5].map(n => ({ value: n, label: String(n) }))
   return (
     <PartTable project={project} segment="risks" title="Registre des risques" onChanged={onChanged}
-      hint="Score = probabilité × impact (1 à 5 chacun) ; critique à partir de 15." canWrite canDelete={isLead(project)}
+      hint="Score = probabilité × impact (1 à 5 chacun) ; critique à partir de 15." canWrite canDelete={lead}
       empty="Aucun risque enregistré."
       fields={[
         { key: 'title', label: 'Risque', required: true },
@@ -112,10 +113,11 @@ export function Risks({ project, onChanged }) {
 
 /** Registre des incidents projet (PRINCE2 « issues ») — distincts des incidents ITIL. */
 export function Issues({ project, onChanged }) {
+  const lead = useIsLead(project)
   return (
     <PartTable project={project} segment="issues" title="Registre des incidents projet" onChanged={onChanged}
       hint="Demandes de changement, hors-spécification, problèmes ou préoccupations du projet — à ne pas confondre avec les incidents de service. Clore exige une résolution."
-      canWrite canDelete={isLead(project)} empty="Aucun incident projet."
+      canWrite canDelete={lead} empty="Aucun incident projet."
       fields={[
         { key: 'title', label: 'Intitulé', required: true },
         { key: 'type', label: 'Type', type: 'select', options: ['Demande de changement', 'Hors spécification', 'Problème ou préoccupation'], default: 'Problème ou préoccupation' },

@@ -3,7 +3,7 @@ import { api } from '../../../api'
 import { toForm, toPayload } from '../../../core/components/RecordForm'
 import RecordForm from '../../../core/components/RecordForm'
 import { COMPONENTS, componentsOf, projectConfig } from '../config'
-import { isLead } from '../rights'
+import useIsLead from '../rights'
 
 /** Corps complet du projet, avec des changements : l'API remplace l'enregistrement. */
 export const projectDto = (r, patch = {}) => ({
@@ -21,7 +21,7 @@ export default function Overview({ project, onChanged }) {
   const [msg, setMsg] = useState('')
   const comps = componentsOf(project)
   useEffect(() => { api.projects.summary(project.id).then(setS).catch(() => setS(null)) }, [project])
-  const lead = isLead(project)
+  const lead = useIsLead(project)
   const frozen = ['Clôturé', 'Abandonné'].includes(project.status)
   const toggle = (id) => {
     const next = comps.includes(id) ? comps.filter(c => c !== id) : [...comps, id]
@@ -94,7 +94,8 @@ export function BusinessCase({ project, onChanged }) {
   const fields = [...(comps.includes('business-case') ? CASE_FIELDS : []), ...(comps.includes('tolerances') ? TOLERANCE_FIELDS : [])]
   const [f, setF] = useState(() => toForm(fields, project))
   const [msg, setMsg] = useState(null)
-  const readOnly = !isLead(project) || ['Clôturé', 'Abandonné'].includes(project.status)
+  const lead = useIsLead(project)
+  const readOnly = !lead || ['Clôturé', 'Abandonné'].includes(project.status)
   const save = () => api.projects.update(project.id, projectDto(project, toPayload(fields, f)))
     .then(() => { setMsg({ ok: true, text: 'Enregistré.' }); onChanged() }).catch(e => setMsg({ ok: false, text: e.message }))
   return (
