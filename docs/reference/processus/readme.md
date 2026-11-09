@@ -31,7 +31,7 @@
 
 *Comptes au 2026-11-03 (main `dcaecc0`, avec SLM-16), sur les tableaux de règles (hors indicateurs). Une
 règle faite en partie compte ✅ (7 règles, la part restante est décrite dans son statut).
-Seule règle de lot 1 restante : RAG-10, en attente d'un jeu de requêtes réelles.*
+Dernière règle de lot 1, RAG-10 (calibrage de la recherche), faite le 2026-11-09.*
 
 ## Interface et navigation
 
@@ -138,8 +138,8 @@ PER-07, 2026-10-12), **liens, console, reporting et recherche** (PER-08, PER-09,
 ### Et après le lot 1
 
 Étapes 4 à 6 terminées (2026-10-11 à 2026-10-13), NIS-18 aussi (2026-10-13) ; le lot 1 est
-terminé, sauf [RAG-10](../recherche.md) (calibrage de la recherche), **en attente** d'un jeu
-de requêtes réelles de l'organisation (décision du 2026-10-13). Le cœur du lot 2 a suivi :
+terminé ; [RAG-10](../recherche.md) (calibrage de la recherche) l'a été le 2026-11-09, plancher
+0,47. Le cœur du lot 2 a suivi :
 toutes les pratiques ont quitté le stade MVP le 2026-10-16
 ([plan d'action](../../plan-action.md#sortie-du-mvp)). Le **lot 2 est terminé** le 2026-10-21,
 [déclarations réglementaires](declarations-reglementaires.md) comprises ; restent les règles 🔜

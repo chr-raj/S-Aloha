@@ -224,4 +224,18 @@ public class SearchTests(ApiFixture api)
         Assert.True(status.GetProperty("embeddings").GetProperty("reachable").GetBoolean());
         Assert.Equal(HttpStatusCode.Accepted, (await api.Client().PostAsync("/api/search/reindex", null)).StatusCode);
     }
+
+    [Fact]
+    public async Task Plancher_de_similarite_calibre_a_0_47()
+    {
+        // RAG-07, RAG-10 : vecteur du passage = 3 (imprimer) + 3 (messagerie) + 3 (lenteur) + 3 (vpn)
+        // + 1 (bureau, haché) ; requête « impression » = le seul groupe « imprimer ». Similarité :
+        // 3 / √37 ≈ 0,493, sous l'ancien plancher (0,5), au-dessus du plancher calibré (0,47).
+        // Aucun mot commun (« impress » contre « imprim ») : seul le sens peut le trouver.
+        var reference = await PublishedArticle("Imprimer", "messagerie lenteur vpn bureau");
+        await WaitFor("bureau", reference);
+        var hit = await WaitFor("impression", reference);
+        Assert.True(hit.GetProperty("semantic").GetBoolean());
+        Assert.False(hit.GetProperty("lexical").GetBoolean());
+    }
 }
