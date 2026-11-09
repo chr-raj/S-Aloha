@@ -104,7 +104,7 @@ stateDiagram-v2
 
 | ID | Règle | Statut | Lot |
 |---|---|---|---|
-| DRG-01 | Une déclaration est toujours **associée à un incident** de nature cyber (INC-40), et visible sur sa fiche | ✅ | 2 |
+| DRG-01 | Une déclaration est toujours **associée à un incident** de nature cyber (INC-40), et visible sur sa fiche | ✅ (dans le périmètre de l'incident : elle le suit quand l'incident change de périmètre, PER-07, et ne le quitte pas seule, 400) | 2 |
 | DRG-02 | Qualifier, décider, enregistrer un envoi et clore : **Manager** ; transitions selon le § 4 (SOC-05) | ✅ | 2 |
 | DRG-03 | **Une déclaration par régime** et par incident (409 sinon) : un même incident peut appeler une déclaration NIS 2 et une déclaration RGPD | ✅ | 2 |
 | DRG-04 | **Non requise** exige un motif (ex. incident non important au sens NIS 2, absence de risque pour les personnes) ; la décision et son auteur sont tracés | ✅ | 2 |

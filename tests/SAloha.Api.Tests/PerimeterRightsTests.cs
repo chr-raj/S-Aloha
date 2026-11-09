@@ -241,6 +241,41 @@ public class PerimeterRightsTests(ApiFixture api)
     }
 
     [Fact]
+    public async Task PER_07_DRG_01_les_declarations_suivent_l_incident_deplace_et_ne_partent_pas_seules()
+    {
+        var (siege, usine, _, tiana, group) = await Setup("per07d");
+        var admin = api.Client();
+        var siegeReader = api.Client("User", tiana);
+        var usineReader = api.Client("User", "membre.per07d", group);
+        object Inc(int p) => new
+        {
+            title = "Fuite confidentielle", impact = "Élevé", urgency = "Élevée", isSecurity = true, perimeterId = p,
+            ownerType = "User", ownerId = tiana, ownerDisplayName = tiana
+        };
+        async Task<List<JsonElement>> Declarations(HttpClient c, int incident) =>
+            (await Json(await c.GetAsync($"/api/regulatory-notifications?incident={incident}"))).EnumerateArray().ToList();
+        var incident = Id(await Json(await admin.PostAsJsonAsync("/api/incidents", Inc(siege))));
+        await Json(await admin.PostAsJsonAsync($"/api/incidents/{incident}/qualification",
+            new { nis2Important = true, personalDataBreach = false, personalDataBreachReason = "Aucune donnée" }));
+        Assert.Single(await Declarations(siegeReader, incident));   // témoin avant le déplacement
+        var declaration = (await Declarations(admin, incident)).Single();
+
+        // Seule, la déclaration ne quitte pas le périmètre de son incident.
+        var dto = JsonSerializer.Deserialize<Dictionary<string, object?>>(declaration.GetRawText())!;
+        dto["perimeterId"] = usine;
+        var alone = await admin.PutAsJsonAsync($"/api/regulatory-notifications/{Id(declaration)}", dto);
+        Assert.Equal(HttpStatusCode.BadRequest, alone.StatusCode);
+        Assert.Equal(siege, (await Declarations(admin, incident)).Single().GetProperty("perimeterId").GetInt32());
+
+        // L'incident déplacé emmène sa déclaration : l'ancien périmètre ne la lit plus, le nouveau la voit.
+        await Json(await admin.PutAsJsonAsync($"/api/incidents/{incident}", Inc(usine)));
+        Assert.Empty(await Declarations(siegeReader, incident));
+        Assert.Equal(HttpStatusCode.NotFound, (await siegeReader.GetAsync($"/api/regulatory-notifications/{Id(declaration)}")).StatusCode);
+        var moved = Assert.Single(await Declarations(usineReader, incident));
+        Assert.Equal(usine, moved.GetProperty("perimeterId").GetInt32());
+    }
+
+    [Fact]
     public async Task PER_07_INC_16_la_resolution_du_parent_ne_touche_pas_un_enfant_d_un_autre_perimetre()
     {
         var (siege, usine, _, tiana, _) = await Setup("per07c");
