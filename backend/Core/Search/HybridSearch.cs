@@ -11,7 +11,8 @@ namespace SAloha.Api.Core.Search;
 /// d'erreur, noms de serveurs) ; le vectoriel, les reformulations et les
 /// autres langues.
 /// </summary>
-public partial class HybridSearch(AppDbContext db, IEmbeddingClient embeddings, IConfiguration config)
+public partial class HybridSearch(AppDbContext db, IEmbeddingClient embeddings, IConfiguration config,
+    ILogger<HybridSearch> log)
 {
     public const int RrfK = 60;
     private const int Candidates = 20;
@@ -94,6 +95,8 @@ public partial class HybridSearch(AppDbContext db, IEmbeddingClient embeddings, 
     /// voit le même index, sans rechargement. Le parcours itératif de l'index
     /// (<c>hnsw.iterative_scan</c>) évite qu'un filtre (type, plancher) ne vide la liste.
     /// Une requête d'une autre dimension que l'index (modèle changé) n'a pas de voisins.
+    /// Ce paramètre exige pgvector 0.8.0 ou plus : si la requête vectorielle échoue (extension
+    /// plus ancienne, base indisponible), la recherche reste lexicale, sans erreur (RAG-02).
     /// </summary>
     private async Task<List<(string Type, int Id, int Passage)>> SemanticAsync(string query, IReadOnlyCollection<string> types)
     {
@@ -102,28 +105,36 @@ public partial class HybridSearch(AppDbContext db, IEmbeddingClient embeddings, 
         var vectors = await embeddings.EmbedAsync([query], TimeSpan.FromSeconds(5));
         if (vectors is null || vectors[0].Length != SearchPassage.Dimensions) return [];
         var q = vectors[0];
-        var kinds = types.ToArray();
-        var maxDistance = 1.0 - MinSimilarity;
-        await using var tx = await db.Database.BeginTransactionAsync();
-        await db.Database.ExecuteSqlRawAsync("SET LOCAL hnsw.iterative_scan = relaxed_order");
-        // Les voisins d'abord (ORDER BY … LIMIT, que sert l'index), le plancher ensuite :
-        // un filtre de distance dans la même clause WHERE écarte l'index (pgvector).
-        var rows = await db.Database.SqlQuery<Neighbour>($"""
-            WITH proches AS MATERIALIZED (
-                SELECT "Id" AS "PassageId", "SourceType", "SourceId",
-                       "EmbeddingVector" <=> {q}::real[]::vector(1024) AS "Distance"
-                FROM "SearchPassages"
-                WHERE "SourceType" = ANY({kinds})
-                ORDER BY "EmbeddingVector" <=> {q}::real[]::vector(1024)
-                LIMIT {Candidates})
-            SELECT "PassageId", "SourceType", "SourceId" FROM proches
-            WHERE "Distance" <= {maxDistance}
-            ORDER BY "Distance"
-            """).ToListAsync();
-        await tx.CommitAsync();
-        // Les 20 candidats sont reclassés par leur distance exacte : relaxed_order ne change
-        // que l'ordre dans lequel l'index les trouve.
-        return rows.Select(r => (r.SourceType, r.SourceId, r.PassageId)).ToList();
+        try
+        {
+            var kinds = types.ToArray();
+            var maxDistance = 1.0 - MinSimilarity;
+            await using var tx = await db.Database.BeginTransactionAsync();
+            await db.Database.ExecuteSqlRawAsync("SET LOCAL hnsw.iterative_scan = relaxed_order");
+            // Les voisins d'abord (ORDER BY … LIMIT, que sert l'index), le plancher ensuite :
+            // un filtre de distance dans la même clause WHERE écarte l'index (pgvector).
+            var rows = await db.Database.SqlQuery<Neighbour>($"""
+                WITH proches AS MATERIALIZED (
+                    SELECT "Id" AS "PassageId", "SourceType", "SourceId",
+                           "EmbeddingVector" <=> {q}::real[]::vector(1024) AS "Distance"
+                    FROM "SearchPassages"
+                    WHERE "SourceType" = ANY({kinds})
+                    ORDER BY "EmbeddingVector" <=> {q}::real[]::vector(1024)
+                    LIMIT {Candidates})
+                SELECT "PassageId", "SourceType", "SourceId" FROM proches
+                WHERE "Distance" <= {maxDistance}
+                ORDER BY "Distance"
+                """).ToListAsync();
+            await tx.CommitAsync();
+            // Les 20 candidats sont reclassés par leur distance exacte : relaxed_order ne change
+            // que l'ordre dans lequel l'index les trouve.
+            return rows.Select(r => (r.SourceType, r.SourceId, r.PassageId)).ToList();
+        }
+        catch (Exception e) when (e is not OperationCanceledException)
+        {
+            log.LogWarning(e, "Requête vectorielle impossible (pgvector 0.8.0 ou plus requis) : recherche lexicale seule.");
+            return [];
+        }
     }
 
     private sealed class Neighbour

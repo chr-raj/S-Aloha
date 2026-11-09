@@ -60,10 +60,13 @@ ensuite il grandit à chaque insertion.
   doit être **sauvegardée puis restaurée** (ou ses index reconstruits par `REINDEX
   DATABASE`) : le tri du texte diffère entre les deux bibliothèques C
   ([exploitation § Recherche](../reference/exploitation.md#recherche)).
-- **PostgreSQL géré** : l'extension `vector` doit y être disponible (c'est le cas chez la
-  plupart des hébergeurs) ; sinon, la migration échoue au démarrage.
+- **PostgreSQL géré** : l'extension `vector` doit y être disponible **en version 0.8.0 ou
+  plus** (parcours itératif de l'index, `hnsw.iterative_scan`), ce qui est le cas chez la
+  plupart des hébergeurs ; sans l'extension, la migration échoue au démarrage ; avec une
+  version plus ancienne, la requête vectorielle échoue, est journalisée, et la recherche
+  reste lexicale (RAG-02).
 - **Recherche approchée** : HNSW peut manquer un voisin ; sur 20 candidats reclassés
-  exactement, l'effet est négligeable, à vérifier au calibrage (RAG-10).
+  exactement, l'effet est négligeable, à vérifier sur des données réelles : le calibrage de RAG-10 (2026-11-09) a été mesuré avant pgvector, avec un cosinus exact en mémoire.
 - **Suite possible** : le filtre des périmètres (RAG-13, aujourd'hui après le classement)
   peut entrer dans la requête SQL ; ce sera le préalable d'un serveur MCP.
 
