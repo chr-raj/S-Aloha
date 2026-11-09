@@ -109,7 +109,7 @@ stateDiagram-v2
 | Lien | Sens | Règle | Statut |
 |---|---|---|---|
 | Problème → Article | Erreur connue | KB-12, PRB-30 | ✅ |
-| Incident → Article | Solution utilisée (lien, compté par KB-14) ; suggestion | INC-19, KB-14 | ✅ (lien, utilisation) / 🔜 (suggestion) |
+| Incident → Article | Solution utilisée (lien, compté par KB-14) ; suggestion | INC-19, KB-14 | ✅ (lien, utilisation ; suggestion par les cas similaires, [RAG-06, RAG-09](../recherche.md)) |
 | Demande → Article | Procédure d'exécution | Lien manuel | ✅ |
 | Changement → Article | Procédure de mise en œuvre | Lien manuel | ✅ |
 
@@ -137,7 +137,7 @@ responsable, KB-13) ; mes articles (Mon travail).
 | `POST /api/knowledge/{id}/submit` | User | Soumettre un brouillon à publication (KB-21) |
 | `POST /api/knowledge/{id}/review` (`{ nextReviewDate }`), `POST /api/knowledge/{id}/archive-request` (`{ reason }`) | Responsable de l'article, Manager | Revue confirmée, archivage demandé (KB-17) |
 | `GET /api/knowledge/{id}/usage` | User | Incidents et demandes reliés (KB-14) |
-| `GET /api/knowledge/suggest?text=` | User | Suggestions pour un incident — 🔜 INC-19 |
+| `GET /api/search/similar?type=incident&id=` | User | Suggestions pour un incident : cas similaires (INC-19, [RAG-06](../recherche.md)) |
 | `GET/POST /api/knowledge/{id}/feedback` (`helpful`) | User | Mon vote ; retour utile / pas utile sur un article publié (KB-13) |
 | `GET /api/knowledge/{id}/versions` | User | Versions publiées (KB-15) |
 
