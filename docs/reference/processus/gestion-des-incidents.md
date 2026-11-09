@@ -43,7 +43,7 @@ créateur, dates) : [socle](../regles-metier.md#5-règles-communes-aux-processus
 |---|---|---|---|---|
 | `Impact` / `Urgency` | texte 10 | ✔ | Faible, Moyen, Élevé / Faible, Moyenne, Élevée | ✅ |
 | `Priority` | texte 10 | calculé | P1–P4 ([matrice](../regles-metier.md#6-priorité)) | ✅ |
-| `Category` | texte 100 | | Texte libre ; référentiel 🔜 SOC-27 | ✅ |
+| `Category` | texte 100 | | Catégorie active de la pratique, tirée du référentiel ([SOC-27](../regles-metier.md), [ADM-50 à ADM-52](../administration.md)) ; saisie libre tant que la pratique n'a aucune catégorie active | ✅ |
 | `AffectedService` | texte 150 | | Nom du service, recopié du catalogue ; un libellé inconnu du catalogue reste un simple texte, sans SLA | ✅ |
 | `IsMajor` | booléen | | Incident majeur | ✅ |
 | `Resolution` | texte | à la résolution | Description de la résolution | ✅ |

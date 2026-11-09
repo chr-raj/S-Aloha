@@ -51,7 +51,7 @@ proactive, depuis une tendance), **contrôle** (analyse, contournement, erreur c
 | `Status` | texte 30 | auto | Nouveau, En analyse, Erreur connue, Résolu, Clos | ✅ |
 | `Impact` / `Urgency` | texte 10 | ✔ | Faible, Moyen, Élevé / Faible, Moyenne, Élevée | ✅ (valeurs contrôlées ✅) |
 | `Priority` | texte 10 | calculé | P1–P4 ([matrice](../regles-metier.md#6-priorité)) | ✅ |
-| `Category` | texte 100 | | Texte libre aujourd'hui ; référentiel 🔜 SOC-27 | ✅ |
+| `Category` | texte 100 | | Catégorie active de la pratique, tirée du référentiel ([SOC-27](../regles-metier.md), [ADM-50 à ADM-52](../administration.md)) ; saisie libre tant que la pratique n'a aucune catégorie active | ✅ |
 | `ServiceId`, `AffectedService` | lien, texte 150 | | Service du catalogue et son nom recopié ([SLM-10](gestion-des-niveaux-de-service.md)) ; un libellé antérieur inconnu du catalogue reste affiché | ✅ |
 | `KnownErrorWorkaround` | texte | | Contournement | ✅ |
 | `RootCause` | texte | | Cause racine **validée** | ✅ |
