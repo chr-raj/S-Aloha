@@ -18,7 +18,7 @@ un seuil de volume. Deux besoins changent la donne avant la première version st
   installations ; après, ce serait un changement cassant pour chacune.
 
 Décision du mainteneur du 2026-11-09 : adopter pgvector maintenant. Meilisearch reste écarté
-(un index externe à synchroniser, y compris pour les périmètres, PER-07 et RAG-13).
+(un index externe à tenir à jour, périmètres compris, PER-07 et RAG-13).
 
 ## Décision
 
@@ -75,5 +75,5 @@ ensuite il grandit à chaque insertion.
 - **Paquet `Pgvector.EntityFrameworkCore`** (type `vector` dans le modèle EF) — écarté : sa
   version 0.3.0 ne déclare que Npgsql EF 9, S-Aloha est en EF 10 ; la colonne générée évite
   toute nouvelle dépendance .NET.
-- **Meilisearch** — écarté : un service de plus et un index séparé à synchroniser (les
+- **Meilisearch** — écarté : un service de plus et un index séparé à tenir à jour (les
   périmètres compris), alors que PostgreSQL porte déjà le plein texte et les vecteurs.
