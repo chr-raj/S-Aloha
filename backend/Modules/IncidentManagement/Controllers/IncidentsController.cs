@@ -189,6 +189,11 @@ public class IncidentsController(AppDbContext db) : RecordController<Incident, I
         }
         if (e.Status != "En attente") e.OnHoldReason = null;
         if (!creating && e.Status == "Résolu" && from is not null && !Incident.Done.Contains(from)) await ResolveChildrenAsync(e);
+        // PER-07, DRG-01 : la lecture des déclarations filtre sur le périmètre copié dans chacune ;
+        // il suit l'incident déplacé, dans le même enregistrement.
+        if (!creating && entry.Property(x => x.PerimeterId).IsModified)
+            foreach (var declaration in await Db.RegulatoryNotifications.Where(d => d.IncidentId == e.Id).ToListAsync())
+                declaration.PerimeterId = e.PerimeterId;
         if (creating || resumed || entry.Property(x => x.Priority).IsModified || entry.Property(x => x.AffectedService).IsModified
             || entry.Property(x => x.ServiceId).IsModified || e.ResolutionDueAt is null)
         {

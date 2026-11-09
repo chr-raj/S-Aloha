@@ -111,6 +111,14 @@ public class RegulatoryNotificationsController(AppDbContext db)
         return null;
     }
 
+    /// <summary>
+    /// DRG-01, PER-07 : une déclaration ne quitte pas seule le périmètre de son incident ; elle le
+    /// suit quand l'incident change de périmètre. (La validation ci-dessus lit le périmètre d'avant.)
+    /// </summary>
+    protected override async Task<string?> CheckMoveAsync(RegulatoryNotification e, int to) =>
+        await Db.Incidents.AnyAsync(i => i.Id == e.IncidentId && i.PerimeterId != to)
+            ? "Une déclaration est dans le périmètre de son incident : déplacer l'incident, ses déclarations le suivent." : null;
+
     /// <summary>DRG-03 : une déclaration par régime et par incident.</summary>
     protected override async Task<string?> ConflictAsync(RegulatoryNotification e) =>
         await Db.RegulatoryNotifications.AnyAsync(x => x.Id != e.Id && x.IncidentId == e.IncidentId && x.Regime == e.Regime)
