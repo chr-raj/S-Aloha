@@ -19,6 +19,7 @@ public class ActiveDirectoryCollector(IConfiguration config) : IDiscoveryCollect
     {
         var timeoutMs = (int.TryParse(config["Ldap:TimeoutSeconds"], out var s) && s > 0 ? s : 5) * 1000;
         using var conn = new LdapConnection { SecureSocketLayer = bool.Parse(config["Ldap:UseSsl"] ?? "false"), ConnectionTimeout = timeoutMs };
+        Core.Auth.LdapTls.Apply(conn, config);   // LDAPS : autorité de l'annuaire (S2)
         var constraints = conn.Constraints;
         constraints.TimeLimit = timeoutMs * 6;
         conn.Constraints = constraints;

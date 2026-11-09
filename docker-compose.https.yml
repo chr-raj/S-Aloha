@@ -1,0 +1,32 @@
+# HTTPS devant S-Aloha (S2) : à empiler sur docker-compose.yml.
+#   docker compose -f docker-compose.yml -f docker-compose.https.yml up -d
+# Réglage (variables d'environnement ou fichier .env) : S_ALOHA_HOST, S_ALOHA_TLS.
+# Seuls les ports 80 (redirection vers HTTPS) et 443 sont publiés : le port 8080 de l'API et le
+# port 80 du service web ne le sont plus. Mode d'emploi : docs/reference/exploitation.md § HTTPS.
+services:
+  caddy:
+    image: caddy:2.10.2
+    restart: unless-stopped
+    depends_on:
+      - web
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      S_ALOHA_HOST: ${S_ALOHA_HOST:-localhost}
+      S_ALOHA_TLS: ${S_ALOHA_TLS:-internal}
+    volumes:
+      - ./https/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./https/certs:/certs:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+  web:
+    ports: !reset []
+
+  api:
+    ports: !reset []
+
+volumes:
+  caddy-data:
+  caddy-config:

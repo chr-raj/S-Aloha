@@ -18,6 +18,14 @@ public class LdapService(IConfiguration config, ILogger<LdapService> logger) : I
     private async Task<LdapConnection> ConnectAsync(string dn, string password, bool service = false)
     {
         var conn = new LdapConnection { SecureSocketLayer = UseSsl, ConnectionTimeout = TimeoutMs };
+        // LDAPS avec l'autorité de l'annuaire (S2) ; sans réglage, validation par défaut du système.
+        try { LdapTls.Apply(conn, config); }
+        catch (InvalidOperationException ex)
+        {
+            conn.Dispose();
+            logger.LogError("{Message}", ex.Message);
+            throw new DirectoryUnavailableException(ex.Message, ex);
+        }
         var constraints = conn.Constraints;
         constraints.TimeLimit = TimeoutMs;   // liaison et recherches bornées (R7)
         conn.Constraints = constraints;

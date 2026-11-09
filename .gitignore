@@ -7,3 +7,7 @@ obj/
 # Caches Python (scripts/)
 __pycache__/
 *.pyc
+
+# Certificats et clés du serveur HTTPS (S2)
+https/certs/*.pem
+https/certs/*.key
