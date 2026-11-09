@@ -1,8 +1,8 @@
 # 🛡️ Sécurité
 
-> Le modèle de sécurité tel qu'il est, et ce qui reste à durcir avant une mise en production. Correctifs suivis dans [GitHub Issues](https://github.com/chrraj7/S-Aloha/issues) (label `security`).
+> Le modèle de sécurité tel qu'il est, et ce qui reste à durcir avant une mise en production. Correctifs suivis dans [GitHub Issues](https://github.com/chrraj7/S-Aloha/issues) (label `security` : vulnérabilités, durcissement, dépendances, exposition et réglages sensibles).
 
-<sub>[← Documentation](../readme.md) · [Produit](produit.md) · [Règles métier](regles-metier.md) · [Architecture](architecture.md) · [Base de données](base-de-donnees.md) · [Frontend](frontend.md)</sub>
+<sub>[← Documentation](../readme.md) · [Produit](produit.md) · [Règles métier](regles-metier.md) · [Architecture](architecture.md) · [Base de données](base-de-donnees.md) · [Frontend](frontend.md) · [Exploitation](exploitation.md)</sub>
 
 ## Identité et authentification
 
@@ -46,13 +46,13 @@ Trois policies imbriquées dans `backend/Program.cs` :
 | `Admin` | Admin |
 
 Toute route sauf `/api/auth/login` et les sondes `/health/live` et `/health/ready` (état seul,
-sans détail, O1) exige au minimum `User`. Au-delà des policies, le
-**rôle effectif par périmètre** (`Core/Perimeters/PerimeterAccess`, [périmètres](perimetres.md))
-décide de la visibilité (404 hors de ses périmètres) et des décisions de gestionnaire (403),
-dans le socle des pratiques et le module Problèmes. Le frontend masque des
-actions selon le rôle, mais **le contrôle fait foi côté API**. La console est composée
-côté serveur : un client ne reçoit jamais un bloc non autorisé pour son rôle. Matrice
-complète : [`regles-metier.md`](regles-metier.md#1-rôles-et-droits).
+ sans détail, O1) exige au minimum `User`. Au-delà des policies, le
+ **rôle effectif par périmètre** (`Core/Perimeters/PerimeterAccess`, [périmètres](perimetres.md))
+ décide de la visibilité (404 hors de ses périmètres) et des décisions de gestionnaire (403),
+ dans le socle des pratiques et le module Problèmes. Le frontend masque des
+ actions selon le rôle, mais **le contrôle fait foi côté API**. La console est composée
+ côté serveur : un client ne reçoit jamais un bloc non autorisé pour son rôle. Matrice
+ complète : [`regles-metier.md`](regles-metier.md#1-rôles-et-droits).
 
 **Coffre d'identifiants de la découverte** ([CFG-45](processus/gestion-de-la-configuration.md)) :
 communautés SNMP v2c, phrases des utilisateurs SNMP v3 (MD5 et DES refusés, CFG-51), comptes SSH (mot de passe ou clé privée, CFG-52), jetons Proxmox VE et comptes vCenter (CFG-54) et comptes
@@ -89,8 +89,8 @@ est toujours vérifié ; « Aucun » chiffrement ne convient qu'à un relais du 
 | 8080 | `api` | API **et Swagger** (`/swagger`), exposés directement |
 | — | `db` | Non publié hors du réseau compose |
 | sortant | `api` (découverte) | Ping, ports TCP témoins, SNMP (UDP 161) vers les réseaux des tâches de scan, LDAP vers l'annuaire : à ouvrir par le pare-feu vers les seuls réseaux à inventorier |
-| — | `garage` | Stockage S3 des pièces jointes (profil `pieces-jointes`) : non publié hors du réseau compose ; l'API l'atteint sur `garage:3900` ([SOC-25](regles-metier.md#8-notifications)) |
-| — | `embeddings` | Non publié hors du réseau compose ; reçoit le texte des contenus indexés, qui **ne quitte pas le SI** (modèle exécuté localement, [ADR-0013](../decisions/adr-0013-recherche-augmentée.md)) |
+| — | `garage` | Stockage S3 des pièces jointes (profil `pieces-jointes`) : non publié hors du réseau compose ; l'API l'atteint sur `garage:3900` ([SOC-25](regles-metier.md#8-notifications)) ... |
+| — | `embeddings` | Non publié hors du réseau compose ; reçoit le texte des contenus indexés, qui **ne quitte pas le SI** (modèle exécuté localement, [ADR-0013](../decisions/adr-0013-recherche-hybride-service-embeddings-separe.md)) |
 
 ## Points de durcissement avant production
 
@@ -99,12 +99,12 @@ est toujours vérifié ; « Aucun » chiffrement ne convient qu'à un relais du 
 
 | Point | État actuel | Cible |
 |---|---|---|
-| Secrets | Valeurs **d'exemple** de `Jwt:Key`, de `Discovery:VaultKey`, du mot de passe PostgreSQL et de `BindPassword` dans `appsettings.json` et `docker-compose.yml` ; hors développement, l'API refuse de démarrer avec ces valeurs | Secrets aléatoires, fournis hors du dépôt |
+| Secrets | Valeurs **d'exemple** de `Jwt:Key`, de `Discovery:VaultKey`, du mot de passe PostgreSQL et de `BindPassword` dans `appsettings.json` et `docker-compose.yml` ; hors développement, l'API refuse de démarrer avec ces valeurs (`Security:AllowSampleSecrets`) — mode démonstration seulement | Gérer via secrets réels et rotation |
 | LDAP | `UseSsl: false`, port 389 : mots de passe utilisateurs en clair sur le réseau | LDAPS (636) |
 | Transport | HTTP sur le port 80 | HTTPS (reverse proxy TLS) |
 | CORS | ✅ Aucune origine externe par défaut ; `Cors:AllowedOrigins` les liste, sans cookie (S3) | Laisser vide si le frontend passe par nginx (même origine) |
 | Exposition | API et Swagger publiés sur 8080 | API joignable seulement via nginx ; Swagger désactivé en production |
-| Jeton côté navigateur | ✅ Cookie `HttpOnly`, `SameSite=Strict`, en-tête anti-CSRF, CSP servie par nginx ([ADR-0018](../decisions/adr-0018-jeton-en-cookie-httponly-et-csp.md)) ; non `Secure` en HTTP | HTTPS en production |
+| Jeton côté navigateur | ✅ Cookie `HttpOnly`, `SameSite=Strict`, en-tête anti-CSRF, CSP servie par nginx ([ADR-0018](../decisions/adr-0018-jeton-en-cookie-httponly-et-csp.md)) ; non `Secure` en local seulement | `Secure` dès que HTTPS est actif |
 | Révocation | Aucune avant expiration | Durée courte et/ou contrôle de l'appartenance AD |
 | Tentatives de connexion | Aucune limitation de débit | Limitation par IP et par compte |
 
@@ -132,13 +132,13 @@ Réglages du dépôt GitHub public, en place depuis le 2026-10-06 :
 |---|---|
 | Signalement privé de vulnérabilités | Les failles arrivent hors des issues publiques ([SECURITY.md](../../SECURITY.md)) |
 | Secret scanning + push protection | Un push contenant un secret reconnu est refusé |
-| Dependabot (alertes, correctifs, versions) | Alerte et PR de correctif dès qu'un avis touche une dépendance ; mises à jour hebdomadaires groupées (npm, NuGet, Docker, Docker Compose, Actions), couvrant les Dockerfiles du backend, du frontend et de l'annuaire de démonstration ainsi que les images des fichiers Compose |
+| Dependabot (alertes, correctifs, versions) | Alerte et PR de correctif dès qu'un avis touche une dépendance ; mises à jour hebdomadaires groupées (npm, NuGet, Docker, Docker Compose, Actions) |
 | CodeQL (configuration par défaut) | Analyse statique C# et JavaScript à chaque push et chaque semaine |
 | CI ([architecture § Intégration continue](architecture.md#intégration-continue)) | Tests, build, audit des dépendances, santé de la doc |
 | Preuve et garde-fous | Une PR prouve son changement par un test qui échoue sans lui ; elle ne peut ni retirer ni désactiver de test, ni modifier l'outillage de vérification sans l'accord du mainteneur |
 | Revue des dépendances et des workflows | Dépendance ajoutée vulnérable (haute, critique) ou sous licence incompatible refusée ; workflows analysés par actionlint et zizmor |
 | Filet après fusion | CI de `main` rouge → issue `main-rouge` avec la commande d'annulation |
-| Règles de `main` | Ni suppression ni push forcé ; toute modification passe par une pull request, CI au vert (DCO et Recette compris) et historique linéaire. Aucune dérogation, administrateur compris |
+| Règles de `main` | Ni suppression ni push forcé ; toute modification passe par une pull request, CI au vert (DCO et Recette compris) et historique linéaire. Aucune dérogation, administrateur ou mainteneur |
 | Actions | Seules les actions publiées par GitHub ; jeton en lecture seule ; workflows d'un contributeur externe soumis à approbation |
 
 Première analyse CodeQL : une alerte, `cs/log-forging` (gravité moyenne). L'identifiant
