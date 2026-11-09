@@ -18,8 +18,8 @@
 
 ## Prochaine séance
 
-*Mise à jour le 2026-11-04.* État : 339 règles ✅, une en lot 1
-([RAG-10](reference/recherche.md), en attente d'un jeu de requêtes réelles), une en lot 3
+*Mise à jour le 2026-11-04.* État : 339 règles ✅, plus [RAG-10](reference/recherche.md)
+(calibrage fait le 2026-11-09), une en lot 3
 (RAG-12, indexation des pièces jointes), aucune en lot 2 ([synthèse](reference/processus/readme.md)) ;
 tous les indicateurs des pratiques sont au tableau de bord. Le lot 3 des pratiques, F7
 (courriels, pièces jointes) et les indicateurs ont été faits le 2026-10-23
@@ -163,9 +163,8 @@ jamais créées seules (même logique que le sas, CFG-40). Inventaire SSH fait l
 | **Phase 3** | **Inventaire approfondi & Cartographie des dépendances** | • Connecteurs d'administration authentifiés : SSH (Linux/Unix) et WMI/WinRM (Windows) pour inventaire complet (OS, logiciels installés, services actifs).<br/>• Connecteurs REST pour hyperviseurs et Cloud (VMware, Proxmox, AWS/Azure).<br/>• Cartographie automatique des dépendances (*Dependency Mapping*) : déduction des relations *« Héberge »* (hyperviseur $\rightarrow$ VM) et *« Se connecte à »* / *« Dépend de »* (analyse des flux et ports d'écoute actifs). | ✅ SSH, Proxmox VE, vCenter, « Héberge » et flux proposés, WinRM à valider sur Windows réel (CFG-52 à CFG-57) ; 🔜 cloud |
 | **Phase 4** | **Agent nomade, Alignement NIS 2 & Console de Staging** | • Agent léger autonome pour postes distants/nomades (`POST /api/discovery/agent-report` avec jeton d'enrôlement par périmètre).<br/>• Détection automatique du Shadow IT (actifs réseau non répertoriés) et de l'obsolescence (corrélation EOL) alimentant le module `ComplianceAssessment` (ReCyF Objectifs 4, 5, 6).<br/>• Interface utilisateur React : console de staging, tableau de réconciliation (diff avant/après) et validation par le Gestionnaire de configuration. | ✅ console de staging, Shadow IT, obsolescence, tableau de bord ; 🔜 agent, preuves NIS 2 |
 
-**Lot 1** : terminé le 2026-10-13 (étapes 1 à 6, périmètres compris, NIS-18), sauf RAG-10
-(calibrage de la recherche), **en attente** d'un jeu de requêtes réelles (décision du
-2026-10-13). **Lot 2** : terminé le 2026-10-21 ([déclarations réglementaires](reference/processus/declarations-reglementaires.md)
+**Lot 1** : terminé le 2026-10-13 (étapes 1 à 6, périmètres compris, NIS-18) ; RAG-10
+(calibrage de la recherche) le 2026-11-09, plancher 0,47. **Lot 2** : terminé le 2026-10-21 ([déclarations réglementaires](reference/processus/declarations-reglementaires.md)
 F11 comprises) ; restent les règles 🔜 du lot 3.
 
 ### Sortie du MVP
