@@ -19,7 +19,7 @@ public class MigrationTests
 {
     private static async Task<(PostgreSqlContainer Db, WebApplicationFactory<Program> Api)> StartOnLegacyDatabase(bool withItilModules)
     {
-        var container = new PostgreSqlBuilder().WithImage("postgres:18-alpine").Build();
+        var container = new PostgreSqlBuilder().WithImage("pgvector/pgvector:0.8.7-pg18").Build();
         await container.StartAsync();
 
         // Base « comme avant » : schéma appliqué, puis historique supprimé —

@@ -19,7 +19,6 @@ builder.AddObservability();
 // Recherche hybride (ADR-0013) : index dérivé, tenu à jour en tâche de fond à
 // chaque enregistrement d'un article, d'un problème ou d'un incident.
 builder.Services.AddSingleton<IndexQueue>();
-builder.Services.AddSingleton<VectorStore>();
 builder.Services.AddSingleton<SearchIndexInterceptor>();
 builder.Services.AddHttpClient<IEmbeddingClient, OllamaEmbeddingClient>();
 builder.Services.AddScoped<SearchIndexer>();

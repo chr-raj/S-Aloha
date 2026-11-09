@@ -14,7 +14,7 @@ namespace SAloha.Api.Core.Search;
 [ApiController]
 [Route("api/search")]
 [Authorize(Policy = "User")]
-public class SearchController(AppDbContext db, HybridSearch search, IEmbeddingClient embeddings, VectorStore store, IndexQueue queue,
+public class SearchController(AppDbContext db, HybridSearch search, IEmbeddingClient embeddings, IndexQueue queue,
     PerimeterAccess access) : ControllerBase
 {
     /// <summary>
@@ -80,7 +80,7 @@ public class SearchController(AppDbContext db, HybridSearch search, IEmbeddingCl
         return Ok(new
         {
             Embeddings = new { embeddings.Enabled, embeddings.Model, Reachable = reachable },
-            VectorsInMemory = store.Count,
+            Vectors = await db.SearchPassages.CountAsync(p => p.Embedding != null),
             Sources = byType,
             LastIndexedAt = await db.SearchPassages.MaxAsync(p => (DateTime?)p.IndexedAt)
         });

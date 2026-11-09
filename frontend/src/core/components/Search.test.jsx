@@ -15,7 +15,7 @@ const query = vi.fn(() => Promise.resolve([
 vi.mock('../../api', () => ({ api: { search: {
   query: (...a) => query(...a),
   similar: () => Promise.resolve([]),
-  status: () => Promise.resolve({ embeddings: { enabled: true, model: 'bge-m3', reachable: false }, vectorsInMemory: 0,
+  status: () => Promise.resolve({ embeddings: { enabled: true, model: 'bge-m3', reachable: false }, vectors: 0,
     sources: [{ type: 'article', records: 2, passages: 3, withVector: 0 }], lastIndexedAt: null }),
   reindex: vi.fn(),
 } } }))

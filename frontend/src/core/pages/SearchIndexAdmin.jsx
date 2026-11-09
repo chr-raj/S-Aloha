@@ -26,7 +26,7 @@ export default function SearchIndexAdmin() {
         <div>
           <b>{!e.enabled ? 'Service d\'embeddings non configuré' : e.reachable ? 'Service d\'embeddings joignable' : 'Service d\'embeddings injoignable'}</b>
           <div className="small">{e.reachable
-            ? `${s.vectorsInMemory} passage(s) vectorisé(s) en mémoire.`
+            ? `${s.vectors} passage(s) vectorisé(s), comparés dans PostgreSQL (pgvector).`
             : 'La recherche fonctionne par les mots seulement ; les vecteurs manquants seront calculés au retour du service.'}</div>
         </div>
       </div>

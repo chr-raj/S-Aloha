@@ -21,7 +21,7 @@ public class IndexQueue
 }
 
 /// <summary>Consommateur de la file ; au démarrage, construit l'index s'il est vide ou sans vecteurs.</summary>
-public class IndexWorker(IServiceScopeFactory scopes, IndexQueue queue, VectorStore store, ILogger<IndexWorker> logger) : BackgroundService
+public class IndexWorker(IServiceScopeFactory scopes, IndexQueue queue, ILogger<IndexWorker> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken ct)
     {
@@ -29,7 +29,6 @@ public class IndexWorker(IServiceScopeFactory scopes, IndexQueue queue, VectorSt
         {
             var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
             var embeddings = scope.ServiceProvider.GetRequiredService<IEmbeddingClient>();
-            await store.LoadAsync(db);
             var empty = !await db.SearchPassages.AnyAsync(ct);
             // Vecteurs manquants alors que le service est configuré : il était
             // absent lors d'une indexation précédente, on rattrape.

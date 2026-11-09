@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using Microsoft.EntityFrameworkCore;
 using SAloha.Api.Core.Search;
 
 namespace SAloha.Api.Tests;
@@ -172,6 +173,24 @@ public class SearchTests(ApiFixture api)
         await WaitFor("messagerie", reference);
         // « courriel lent » ne partage aucune racine avec le texte : seul le vecteur le rapproche (RAG-05).
         var hit = await WaitFor("courriel lent", reference);
+        Assert.True(hit.GetProperty("semantic").GetBoolean());
+        Assert.False(hit.GetProperty("lexical").GetBoolean());
+    }
+
+    [Fact]
+    public async Task Un_vecteur_ecrit_en_base_par_un_autre_processus_est_vu_sans_rechargement()
+    {
+        // ADR-0022 : la similarité est calculée dans PostgreSQL (pgvector). Un vecteur écrit
+        // par un autre processus (autre instance de l'API, restauration, futur serveur MCP)
+        // compte dès son écriture, sans recharger de copie en mémoire.
+        var reference = await PublishedArticle("Badge refusé au portique ZB-NORD", "Réenrôler le badge au poste de garde ZB-NORD.");
+        await WaitFor("ZB-NORD", reference);
+        var vecteur = (await new FakeEmbeddingClient().EmbedAsync(["imprimante"], TimeSpan.FromSeconds(1)))![0];
+        await using (var db = api.Database())
+            await db.SearchPassages.Where(p => p.Reference == reference)
+                .ExecuteUpdateAsync(s => s.SetProperty(p => p.Embedding, vecteur));
+        // « impression » ne partage aucun mot avec l'article : seul le vecteur écrit en base le rapproche.
+        var hit = await WaitFor("impression", reference);
         Assert.True(hit.GetProperty("semantic").GetBoolean());
         Assert.False(hit.GetProperty("lexical").GetBoolean());
     }

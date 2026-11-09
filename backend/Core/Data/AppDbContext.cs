@@ -197,6 +197,8 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
 
         // Index de recherche (ADR-0013) : plein texte « french » généré par
         // PostgreSQL sur le titre et le passage, index GIN.
+        // pgvector (ADR-0022) : la similarité des vecteurs est calculée dans PostgreSQL.
+        b.HasPostgresExtension("vector");
         b.Entity<SearchPassage>()
             .HasGeneratedTsVectorColumn(p => p.SearchVector, "french", p => new { p.Title, p.Text })
             .HasIndex(p => p.SearchVector).HasMethod("GIN");

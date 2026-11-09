@@ -227,8 +227,11 @@ erDiagram
   `SourceId`, `Reference`, `Title`, `Status`, `Ordinal`, `Text` (passage de 800 caractères
   au plus), `Embedding` (`real[]`, vecteur normalisé de 1024 dimensions, null sans service
   d'embeddings), `EmbeddingModel`, `SearchVector` (colonne **générée** par PostgreSQL :
-  `to_tsvector('french', …)` sur titre et texte, index GIN), `IndexedAt`
-  ([recherche](recherche.md), [ADR-0013](../decisions/adr-0013-recherche-hybride-service-embeddings-separe.md)).
+  `to_tsvector('french', …)` sur titre et texte, index GIN), `IndexedAt` ; hors du modèle EF,
+  `EmbeddingVector` (`vector(1024)`, colonne **générée** depuis `Embedding`, `NULL` pour une
+  autre dimension, index HNSW `vector_cosine_ops` ; extension `vector`, migration `Pgvector`)
+  ([recherche](recherche.md), [ADR-0013](../decisions/adr-0013-recherche-hybride-service-embeddings-separe.md),
+  [ADR-0022](../decisions/adr-0022-pgvector-similarite-dans-postgresql.md)).
 - **`ItemLinks`** (socle, `backend/Core/Links/ItemLink.cs`) : `FromType`, `FromId`, `ToType`,
   `ToId`, `CreatedBy`, `CreatedAt`. Types : `problem`, `incident`, `request`, `change`, `ci`,
   `service`, `agreement`, `article`, `improvement`, `assessment`, `project`. Pas de clé étrangère (une extrémité

@@ -18,6 +18,13 @@ public class SearchPassage
     [MaxLength(30)] public string Status { get; set; } = "";
     public int Ordinal { get; set; }
     public string Text { get; set; } = "";
+    /// <summary>
+    /// Dimension des vecteurs indexés par pgvector (bge-m3, ADR-0022). La colonne générée
+    /// <c>EmbeddingVector vector(1024)</c> et son index HNSW, créés par la migration Pgvector
+    /// et inconnus du modèle EF, ne retiennent que les vecteurs de cette dimension.
+    /// Changer de modèle pour une autre dimension demande une migration.
+    /// </summary>
+    public const int Dimensions = 1024;
     /// <summary>Vecteur normalisé (bge-m3 : 1024 dimensions) ; null si le service d'embeddings était absent.</summary>
     public float[]? Embedding { get; set; }
     [MaxLength(50)] public string? EmbeddingModel { get; set; }

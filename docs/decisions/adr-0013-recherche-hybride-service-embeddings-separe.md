@@ -3,7 +3,7 @@
 <sub>[← Documentation](../readme.md) · [Toutes les décisions](readme.md)</sub>
 
 - **Date** : 2026-10-08
-- **Statut** : accepté
+- **Statut** : accepté — point 3 (« vecteurs sans pgvector ») remplacé par [ADR-0022](adr-0022-pgvector-similarite-dans-postgresql.md) le 2026-11-09
 - **Décideur** : Leipa
 
 ## Contexte
