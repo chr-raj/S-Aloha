@@ -9,6 +9,12 @@
 # docs/reference/exploitation.md § Mode démonstration.
 
 services:
+  # S1 : les secrets d'exemple ne vivent qu'ici ; ils remplacent les valeurs vides de
+  # docker-compose.yml après la fusion des deux fichiers.
+  db:
+    environment:
+      POSTGRES_PASSWORD: "ChangeMe_Str0ng!"
+
   annuaire:
     image: ghcr.io/chrraj7/s-aloha-annuaire-demo:${S_ALOHA_VERSION:-edge}
     build: ./demo/annuaire
@@ -40,6 +46,9 @@ services:
       Ldap__BaseDn: "DC=saloha,DC=lan"
       Ldap__BindUser: "CN=svc-saloha,CN=Users,DC=saloha,DC=lan"
       Ldap__BindPassword: "Demo-Service-2026"
+      ConnectionStrings__Default: "Host=db;Database=saloha;Username=saloha;Password=ChangeMe_Str0ng!"
+      Jwt__Key: "CHANGEZ-CETTE-CLE-SECRETE-DE-64-CARACTERES-MINIMUM-0123456789ab"
+      Discovery__VaultKey: "CHANGEZ-CETTE-CLE-DU-COFFRE-DE-32-CARACTERES-MINIMUM-0123456789"
       # S7 : clé JWT et mot de passe de base d'exemple acceptés ici, et seulement ici (démonstration).
       Security__AllowSampleSecrets: "true"
 

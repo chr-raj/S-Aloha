@@ -99,7 +99,7 @@ est toujours vérifié ; « Aucun » chiffrement ne convient qu'à un relais du 
 
 | Point | État actuel | Cible |
 |---|---|---|
-| Secrets | Valeurs **d'exemple** de `Jwt:Key`, de `Discovery:VaultKey`, du mot de passe PostgreSQL et de `BindPassword` dans `appsettings.json` et `docker-compose.yml` ; hors développement, l'API **refuse de démarrer** avec elles ou avec une clé JWT de moins de 64 caractères (S7), sauf en démonstration (`Security:AllowSampleSecrets`, avertissement au journal) | Secrets Docker ou variables d'environnement injectées, clé JWT aléatoire ≥ 64 caractères, clé du coffre aléatoire ≥ 32 caractères fixée avant le premier identifiant |
+| Secrets | ✅ `docker-compose.yml` lit le mot de passe PostgreSQL, `Jwt:Key` et `Discovery:VaultKey` dans l'environnement, vides à défaut (S1, [exploitation § Secrets](exploitation.md#secrets)) ; valeurs **d'exemple** de ces trois réglages dans `appsettings.json` et `docker-compose.demo.yml` seulement, et de `BindPassword` dans `appsettings.json` et `docker-compose.yml` ; hors développement, l'API **refuse de démarrer** avec elles ou avec une clé JWT de moins de 64 caractères (S7), sauf en démonstration (`Security:AllowSampleSecrets`, avertissement au journal) | Secrets Docker ou variables d'environnement injectées, clé JWT aléatoire ≥ 64 caractères, clé du coffre aléatoire ≥ 32 caractères fixée avant le premier identifiant |
 | LDAP | `UseSsl: false`, port 389 : mots de passe utilisateurs en clair sur le réseau | LDAPS (636) |
 | Transport | HTTP sur le port 80 | HTTPS (reverse proxy TLS) |
 | CORS | ✅ Aucune origine externe par défaut ; `Cors:AllowedOrigins` les liste, sans cookie (S3) | Laisser vide si le frontend passe par nginx (même origine) |
