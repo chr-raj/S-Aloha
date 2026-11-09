@@ -210,6 +210,37 @@ public class PerimeterRightsTests(ApiFixture api)
     }
 
     [Fact]
+    public async Task PER_07_INC_16_un_parent_ne_change_pas_de_perimetre_tant_qu_il_a_des_enfants_rattaches()
+    {
+        var (siege, usine, _, tiana, _) = await Setup("per07p");
+        var t = api.Client("User", tiana);
+        var admin = api.Client();
+        object Inc(string title, int p) => new
+        {
+            title, impact = "Faible", urgency = "Faible", perimeterId = p, ownerType = "User", ownerId = tiana, ownerDisplayName = tiana
+        };
+        var parent = await Json(await t.PostAsJsonAsync("/api/incidents", Inc("Coupure réseau Siège", siege)));
+        var child = await Json(await t.PostAsJsonAsync("/api/incidents", Inc("Poste injoignable", siege)));
+        await Json(await t.PutAsJsonAsync($"/api/incidents/{Id(child)}/parent", new { parentReference = Ref(parent) }));
+
+        // Un enfant au Siège : le déplacement du parent vers l'Usine est refusé, rien ne change.
+        var refused = await admin.PutAsJsonAsync($"/api/incidents/{Id(parent)}", Inc("Coupure réseau Siège", usine));
+        Assert.Equal(HttpStatusCode.BadRequest, refused.StatusCode);
+        Assert.Contains("enfant", await refused.Content.ReadAsStringAsync());
+        Assert.Equal(siege, (await Json(await admin.GetAsync($"/api/incidents/{Id(parent)}"))).GetProperty("perimeterId").GetInt32());
+        var family = await Json(await admin.GetAsync($"/api/incidents/{Id(parent)}/family"));
+        Assert.Equal([Ref(child)], Refs(family.GetProperty("children")));
+
+        // Une modification sans changement de périmètre reste permise.
+        await Json(await admin.PutAsJsonAsync($"/api/incidents/{Id(parent)}", Inc("Coupure réseau Siège (bâtiment B)", siege)));
+
+        // Enfant détaché, le parent se déplace.
+        await Json(await t.PutAsJsonAsync($"/api/incidents/{Id(child)}/parent", new { parentReference = "" }));
+        var moved = await Json(await admin.PutAsJsonAsync($"/api/incidents/{Id(parent)}", Inc("Coupure réseau Siège", usine)));
+        Assert.Equal(usine, moved.GetProperty("perimeterId").GetInt32());
+    }
+
+    [Fact]
     public async Task PER_07_INC_16_la_resolution_du_parent_ne_touche_pas_un_enfant_d_un_autre_perimetre()
     {
         var (siege, usine, _, tiana, _) = await Setup("per07c");
