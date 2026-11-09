@@ -22,9 +22,10 @@ public partial class HybridSearch(AppDbContext db, IEmbeddingClient embeddings, 
     /// <summary>
     /// Plancher de similarité cosinus (RAG-07) : sans lui, une recherche sans
     /// rapport ramène quand même les passages « les moins éloignés », présentés
-    /// comme des réponses. Valeur à confirmer sur un jeu de requêtes réel.
+    /// comme des réponses. 0,47 : valeur calibrée le 2026-11-09 (RAG-10), avec une marge sur
+    /// les requêtes sans réponse, qui sortent autour de 0,42 à 0,45 avec bge-m3.
     /// </summary>
-    private float MinSimilarity => float.TryParse(config["Search:MinSimilarity"], System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : 0.5f;
+    private float MinSimilarity => float.TryParse(config["Search:MinSimilarity"], System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : 0.47f;
 
     /// <param name="query">Requête du vectoriel, et du lexical si <paramref name="lexicalQuery"/> est absent.</param>
     /// <param name="lexicalQuery">
