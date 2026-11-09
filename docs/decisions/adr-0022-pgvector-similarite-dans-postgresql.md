@@ -40,7 +40,7 @@ Décision du mainteneur du 2026-11-09 : adopter pgvector maintenant. Meilisearch
 Le reste de l'ADR-0013 tient : service d'embeddings séparé, plein texte PostgreSQL, fusion
 RRF, index dérivé, recherche lexicale sans le service.
 
-## Mesures (2026-11-09, vecteurs aléatoires de 1024 dimensions, poste du mainteneur)
+## Mesures (2026-11-09, vecteurs aléatoires de 1024 dimensions, PostgreSQL 16 en conteneur)
 
 | Méthode | 10 000 passages | 50 000 passages |
 |---|---|---|
