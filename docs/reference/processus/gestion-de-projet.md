@@ -188,7 +188,7 @@ PRJ-22, PRJ-30 à PRJ-33.
 | Indicateur | Calcul | Statut |
 |---|---|---|
 | Volumétrie par statut et par méthode | | 🔜 |
-| Projets hors tolérance | PRJ-31, PRJ-32 | 🔜 (reporting) |
+| Projets hors tolérance | PRJ-31, PRJ-32 | ✅ (reporting : [REP-05 à REP-07](../reporting.md)) |
 
 ## 9. API
 
