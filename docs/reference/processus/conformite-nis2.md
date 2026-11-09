@@ -157,7 +157,7 @@ stateDiagram-v2
 | Évaluation → Amélioration | Traitement d'un écart | NIS-15, [CSI-10](amelioration-continue.md) | ✅ |
 | Évaluation → Changement, Article, CI | Preuves de mise en œuvre | NIS-08 | ✅ (preuve d'une réponse, ou lien manuel de l'évaluation) |
 | Évaluation → Évaluation | Évaluation précédente du même périmètre | NIS-09 | ✅ (comparaison, sans lien à créer) |
-| Incident cyber → Déclaration réglementaire | Obligation de notification NIS 2 (art. 23) | [déclarations réglementaires](declarations-reglementaires.md) | 🔜 |
+| Incident cyber → Déclaration réglementaire | Obligation de notification NIS 2 (art. 23) | [DRG-01](declarations-reglementaires.md), [INC-41](gestion-des-incidents.md) | ✅ (la qualification ouvre une déclaration reliée à l'incident) |
 
 ## 8. Console et indicateurs
 
