@@ -4,7 +4,7 @@ using SAloha.Api.Core.Data;
 namespace SAloha.Api.Core.Search;
 
 /// <summary>Met à jour les passages d'un enregistrement (ou de tous) et leurs vecteurs.</summary>
-public class SearchIndexer(AppDbContext db, IEmbeddingClient embeddings, VectorStore store, ILogger<SearchIndexer> logger)
+public class SearchIndexer(AppDbContext db, IEmbeddingClient embeddings, ILogger<SearchIndexer> logger)
 {
     /// <summary>
     /// Réindexe un enregistrement : ses anciens passages sont retirés, puis
@@ -16,7 +16,6 @@ public class SearchIndexer(AppDbContext db, IEmbeddingClient embeddings, VectorS
     {
         var old = await db.SearchPassages.Where(p => p.SourceType == type && p.SourceId == id).ToListAsync(ct);
         db.SearchPassages.RemoveRange(old);
-        store.RemoveSource(type, id);
 
         var doc = await SearchSources.IndexableAsync(db, type, id);
         var passages = new List<SearchPassage>();
@@ -36,14 +35,12 @@ public class SearchIndexer(AppDbContext db, IEmbeddingClient embeddings, VectorS
             db.SearchPassages.AddRange(passages);
         }
         await db.SaveChangesAsync(ct);
-        foreach (var p in passages) store.Add(p);
     }
 
     /// <summary>Reconstruit tout l'index (démarrage sur un index vide, demande d'un administrateur).</summary>
     public async Task ReindexAllAsync(CancellationToken ct = default)
     {
         await db.SearchPassages.ExecuteDeleteAsync(ct);
-        store.Clear();
         var count = 0;
         foreach (var type in SearchSources.Types)
             foreach (var id in await SearchSources.IdsAsync(db, type))

@@ -21,7 +21,7 @@ son état actuel, et pas seulement *quel* est cet état.
 | [0010](adr-0010-certificat-d-origine-dco.md) | Les contributions sont signées sous le DCO, sans cession de droits | 2026-10-06 | accepté |
 | [0011](adr-0011-financement-sponsoring-et-services.md) | Financement par le sponsoring et les services, en commençant par GitHub Sponsors | 2026-10-06 | accepté |
 | [0012](adr-0012-referentiel-nis2-structure-versionnee-texte-importe.md) | Référentiel NIS 2 : structure versionnée dans le dépôt, texte importé par l'administrateur | 2026-10-08 | accepté |
-| [0013](adr-0013-recherche-hybride-service-embeddings-separe.md) | Recherche hybride : embeddings dans un service séparé, plein texte PostgreSQL, vecteurs sans pgvector | 2026-10-08 | accepté |
+| [0013](adr-0013-recherche-hybride-service-embeddings-separe.md) | Recherche hybride : embeddings dans un service séparé, plein texte PostgreSQL, vecteurs sans pgvector | 2026-10-08 | accepté, point 3 remplacé par [0022](adr-0022-pgvector-similarite-dans-postgresql.md) |
 | [0014](adr-0014-perimetres-droits-scopes.md) | Périmètres : droits scopés, affectations d'utilisateurs et de groupes AD | 2026-10-10 | accepté |
 | [0015](adr-0015-gestion-de-projet-methode-active-composants.md) | Gestion de projet : la méthode active des composants | 2026-10-12 | accepté |
 | [0016](adr-0016-reponses-de-l-api-en-dto.md) | Réponses de l'API : des DTO, plus d'entités EF | 2026-10-19 | accepté |
@@ -30,6 +30,7 @@ son état actuel, et pas seulement *quel* est cet état.
 | [0019](adr-0019-console-d-administration.md) | Administration : utilisateurs depuis l'annuaire, fusion des doublons, catégories | 2026-10-19 | accepté |
 | [0020](adr-0020-pieces-jointes-s3-et-smtp-configurables.md) | Pièces jointes sur un stockage compatible S3 (Garage), courriels par un SMTP configurable, réglés dans la console | 2026-10-23 | accepté |
 | [0021](adr-0021-langage-visuel-v2-sombre-et-nouvel-embleme.md) | Langage visuel v2 : sombre par défaut, nouvel emblème, polices servies par l'application | 2026-10-23 | accepté |
+| [0022](adr-0022-pgvector-similarite-dans-postgresql.md) | pgvector : la similarité des vecteurs est calculée dans PostgreSQL | 2026-11-09 | accepté |
 
 Les choix fondateurs antérieurs à cette base (authentification AD LDAP → JWT, analyses
 RCA stockées en JSON) sont décrits dans [`reference/architecture.md`](../reference/architecture.md)

@@ -5,13 +5,14 @@ using SAloha.Api.Core.Data;
 namespace SAloha.Api.Core.Search;
 
 /// <summary>
-/// Recherche hybride (ADR-0013) : plein texte PostgreSQL (configuration
-/// « french ») et similarité des vecteurs bge-m3, fusionnés par rang
-/// réciproque (RRF, k = 60). Le lexical trouve les termes exacts (codes
+/// Recherche hybride (ADR-0013, ADR-0022) : plein texte PostgreSQL (configuration
+/// « french ») et similarité des vecteurs bge-m3 calculée par pgvector dans
+/// PostgreSQL, fusionnés par rang réciproque (RRF, k = 60). Le lexical trouve les termes exacts (codes
 /// d'erreur, noms de serveurs) ; le vectoriel, les reformulations et les
 /// autres langues.
 /// </summary>
-public partial class HybridSearch(AppDbContext db, IEmbeddingClient embeddings, VectorStore store, IConfiguration config)
+public partial class HybridSearch(AppDbContext db, IEmbeddingClient embeddings, IConfiguration config,
+    ILogger<HybridSearch> log)
 {
     public const int RrfK = 60;
     private const int Candidates = 20;
@@ -87,14 +88,60 @@ public partial class HybridSearch(AppDbContext db, IEmbeddingClient embeddings, 
             .Select(p => (p.SourceType, p.SourceId, p.Id)).ToList();
     }
 
+    /// <summary>
+    /// Plus proches voisins par distance cosinus (opérateur <c>&lt;=&gt;</c> de pgvector),
+    /// calculés dans PostgreSQL sur l'index HNSW de <c>EmbeddingVector</c> (ADR-0022) : les
+    /// vecteurs ne vivent plus dans la mémoire de l'API, et tout processus qui lit la base
+    /// voit le même index, sans rechargement. Le parcours itératif de l'index
+    /// (<c>hnsw.iterative_scan</c>) évite qu'un filtre (type, plancher) ne vide la liste.
+    /// Une requête d'une autre dimension que l'index (modèle changé) n'a pas de voisins.
+    /// Ce paramètre exige pgvector 0.8.0 ou plus : si la requête vectorielle échoue (extension
+    /// plus ancienne, base indisponible), la recherche reste lexicale, sans erreur (RAG-02).
+    /// </summary>
     private async Task<List<(string Type, int Id, int Passage)>> SemanticAsync(string query, IReadOnlyCollection<string> types)
     {
-        if (!embeddings.Enabled || store.Count == 0) return [];
+        if (!embeddings.Enabled || !await db.SearchPassages.AnyAsync(p => p.Embedding != null)) return [];
         // Délai court : une recherche ne doit pas attendre un service lent ; le lexical répond seul.
         var vectors = await embeddings.EmbedAsync([query], TimeSpan.FromSeconds(5));
-        if (vectors is null) return [];
-        return store.Nearest(vectors[0], types, Candidates, MinSimilarity)
-            .Select(x => (x.Entry.SourceType, x.Entry.SourceId, x.Entry.PassageId)).ToList();
+        if (vectors is null || vectors[0].Length != SearchPassage.Dimensions) return [];
+        var q = vectors[0];
+        try
+        {
+            var kinds = types.ToArray();
+            var maxDistance = 1.0 - MinSimilarity;
+            await using var tx = await db.Database.BeginTransactionAsync();
+            await db.Database.ExecuteSqlRawAsync("SET LOCAL hnsw.iterative_scan = relaxed_order");
+            // Les voisins d'abord (ORDER BY … LIMIT, que sert l'index), le plancher ensuite :
+            // un filtre de distance dans la même clause WHERE écarte l'index (pgvector).
+            var rows = await db.Database.SqlQuery<Neighbour>($"""
+                WITH proches AS MATERIALIZED (
+                    SELECT "Id" AS "PassageId", "SourceType", "SourceId",
+                           "EmbeddingVector" <=> {q}::real[]::vector(1024) AS "Distance"
+                    FROM "SearchPassages"
+                    WHERE "SourceType" = ANY({kinds})
+                    ORDER BY "EmbeddingVector" <=> {q}::real[]::vector(1024)
+                    LIMIT {Candidates})
+                SELECT "PassageId", "SourceType", "SourceId" FROM proches
+                WHERE "Distance" <= {maxDistance}
+                ORDER BY "Distance"
+                """).ToListAsync();
+            await tx.CommitAsync();
+            // Les 20 candidats sont reclassés par leur distance exacte : relaxed_order ne change
+            // que l'ordre dans lequel l'index les trouve.
+            return rows.Select(r => (r.SourceType, r.SourceId, r.PassageId)).ToList();
+        }
+        catch (Exception e) when (e is not OperationCanceledException)
+        {
+            log.LogWarning(e, "Requête vectorielle impossible (pgvector 0.8.0 ou plus requis) : recherche lexicale seule.");
+            return [];
+        }
+    }
+
+    private sealed class Neighbour
+    {
+        public int PassageId { get; set; }
+        public string SourceType { get; set; } = "";
+        public int SourceId { get; set; }
     }
 
     private static string Snippet(string text) => text.Length <= 280 ? text : text[..280].TrimEnd() + "…";

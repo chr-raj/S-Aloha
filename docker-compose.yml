@@ -2,7 +2,8 @@ name: s-aloha
 
 services:
   db:
-    image: postgres:16-alpine
+    # pgvector (ADR-0022) : même PostgreSQL 16, avec l'extension « vector ».
+    image: pgvector/pgvector:0.8.7-pg16
     environment:
       POSTGRES_DB: saloha
       POSTGRES_USER: saloha

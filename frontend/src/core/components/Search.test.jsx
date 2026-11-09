@@ -12,11 +12,12 @@ const query = vi.fn(() => Promise.resolve([
   { type: 'problem', id: 7, reference: 'PRB-2026-0007', title: 'Purge Exchange', status: 'Erreur connue',
     snippet: 'Contournement : relancer la purge.', score: 0.02, lexical: true, semantic: true },
 ]))
+const status = vi.fn(() => Promise.resolve({ embeddings: { enabled: true, model: 'bge-m3', reachable: false }, vectors: 0,
+  sources: [{ type: 'article', records: 2, passages: 3, withVector: 0 }], lastIndexedAt: null }))
 vi.mock('../../api', () => ({ api: { search: {
   query: (...a) => query(...a),
   similar: () => Promise.resolve([]),
-  status: () => Promise.resolve({ embeddings: { enabled: true, model: 'bge-m3', reachable: false }, vectorsInMemory: 0,
-    sources: [{ type: 'article', records: 2, passages: 3, withVector: 0 }], lastIndexedAt: null }),
+  status: (...a) => status(...a),
   reindex: vi.fn(),
 } } }))
 
@@ -41,4 +42,11 @@ it('l\'administration signale un service d\'embeddings injoignable', async () =>
   render(<MemoryRouter><SearchIndexAdmin /></MemoryRouter>)
   expect(await screen.findByText('Service d\'embeddings injoignable')).toBeTruthy()
   expect(screen.getByText(/par les mots seulement/)).toBeTruthy()
+})
+
+it('l\'administration dit que les vecteurs sont comparés dans PostgreSQL (ADR-0022)', async () => {
+  status.mockResolvedValueOnce({ embeddings: { enabled: true, model: 'bge-m3', reachable: true }, vectors: 3,
+    sources: [{ type: 'article', records: 2, passages: 3, withVector: 3 }], lastIndexedAt: null })
+  render(<MemoryRouter><SearchIndexAdmin /></MemoryRouter>)
+  expect(await screen.findByText('3 passage(s) vectorisé(s), comparés dans PostgreSQL (pgvector).')).toBeTruthy()
 })

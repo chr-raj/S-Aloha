@@ -19,7 +19,7 @@ namespace SAloha.Api.Tests;
 /// </summary>
 public class StartupTests : IAsyncLifetime
 {
-    private readonly PostgreSqlContainer _server = new PostgreSqlBuilder("postgres:18-alpine").Build();
+    private readonly PostgreSqlContainer _server = new PostgreSqlBuilder("pgvector/pgvector:0.8.7-pg18").Build();
 
     public Task InitializeAsync() => _server.StartAsync();
     public Task DisposeAsync() => _server.DisposeAsync().AsTask();

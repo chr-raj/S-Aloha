@@ -22,7 +22,8 @@ public partial class FakeEmbeddingClient : IEmbeddingClient
         ["vpn", "télétravail", "distant", "nomade"],
         ["imprimante", "impression", "imprimer"],
     ];
-    private const int Dims = 64;
+    // Même dimension que bge-m3 : les tests passent par la colonne vector(1024) et son index HNSW (ADR-0022).
+    private const int Dims = SearchPassage.Dimensions;
 
     public Task<float[][]?> EmbedAsync(IReadOnlyList<string> texts, TimeSpan timeout, CancellationToken ct = default) =>
         Task.FromResult(Available ? texts.Select(Embed).ToArray() : null);

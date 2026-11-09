@@ -3,8 +3,9 @@
 > Recherche hybride (mots et sens) sur les contenus validés de S-Aloha : chercher dans la
 > connaissance, retrouver les cas similaires. Capacité transverse du socle, pas une
 > pratique ITIL. Préfixe des règles : **RAG**. Conventions (✅ / 🔜, lots) :
-> [règles métier](regles-metier.md#3-conventions-de-ce-référentiel). Décision :
-> [ADR-0013](../decisions/adr-0013-recherche-hybride-service-embeddings-separe.md).
+> [règles métier](regles-metier.md#3-conventions-de-ce-référentiel). Décisions :
+> [ADR-0013](../decisions/adr-0013-recherche-hybride-service-embeddings-separe.md),
+> [ADR-0022](../decisions/adr-0022-pgvector-similarite-dans-postgresql.md) (pgvector).
 
 <sub>[← Documentation](../readme.md) · [Produit](produit.md) · [Règles métier](regles-metier.md) · [Architecture](architecture.md) · [Base de données](base-de-donnees.md) · [Frontend](frontend.md) · [Exploitation](exploitation.md) · [Sécurité](securite.md) · [Glossaire](glossaire.md)</sub>
 
@@ -41,9 +42,9 @@ dans S-Aloha, tous les rôles lisent tous les enregistrements.
 | RAG-02 | **Sans service d'embeddings** (`Embeddings:Url` vide, panne, délai dépassé : 5 s pour une recherche, 120 s pour une indexation), la recherche reste **lexicale, sans erreur** ; les passages sont créés sans vecteur et vectorisés au retour du service (au démarrage, s'il en manque) | ✅ | |
 | RAG-03 | L'index est **dérivé** : mis à jour en tâche de fond à chaque enregistrement d'un article, problème ou incident (intercepteur EF → file → indexeur, un enregistrement à la fois) ; construit au démarrage s'il est vide ; un échec d'indexation ne bloque **jamais** l'enregistrement | ✅ | |
 | RAG-04 | **Passages** de 800 caractères au plus, découpés par paragraphes ; un paragraphe trop long est découpé avec 100 caractères de recouvrement ; le titre accompagne chaque passage dans le vecteur | ✅ | |
-| RAG-05 | **Recherche libre** : lexical = `tsvector` « french » sur titre et passage (index GIN), termes en **OU**, classement `ts_rank_cd` ; sémantique = cosinus `bge-m3` ; fusion **RRF** (k = 60) au niveau de l'enregistrement (son meilleur passage) ; chaque résultat indique s'il a été trouvé **par les mots, par le sens ou les deux** | ✅ | |
+| RAG-05 | **Recherche libre** : lexical = `tsvector` « french » sur titre et passage (index GIN), termes en **OU**, classement `ts_rank_cd` ; sémantique = cosinus `bge-m3` calculé dans PostgreSQL par pgvector (index HNSW sur `EmbeddingVector vector(1024)` ; les 20 plus proches, puis le plancher RAG-07) ; fusion **RRF** (k = 60) au niveau de l'enregistrement (son meilleur passage) ; chaque résultat indique s'il a été trouvé **par les mots, par le sens ou les deux** | ✅ | |
 | RAG-06 | **Cas similaires** d'un incident ou d'un problème : sens sur titre et description (2 000 caractères au plus), mots sur le titre seul ; articles, problèmes et incidents indexés, l'enregistrement lui-même exclu ; 5 résultats. Un incident ouvert ne voit donc que des incidents résolus | ✅ | |
-| RAG-07 | **Plancher de similarité** cosinus `Search:MinSimilarity` = **0,47** par défaut, calibré le 2026-11-09 avec `bge-m3` (RAG-10) : sous ce plancher, un passage n'est pas proposé comme trouvé par le sens | ✅ | |
+| RAG-07 | **Plancher de similarité** cosinus `Search:MinSimilarity` = 0,5 par défaut. **Non mesuré** : à calibrer sur un jeu de requêtes réel avec `bge-m3` (RAG-10) | ✅ (valeur provisoire) | |
 | RAG-08 | **Administration › Index de recherche** (Admin) : état du service (configuré, joignable, modèle, vecteurs en mémoire), et par source : enregistrements, passages, passages avec vecteur, dernière indexation ; **reconstruction** de l'index en tâche de fond | ✅ | |
 | RAG-13 | **Périmètres** ([PER-09](perimetres.md)) : la recherche et les cas similaires ne renvoient que les enregistrements visibles de l'utilisateur (ses périmètres, articles publiés de tous) ; filtrés après le classement, sur trois fois plus de candidats ; les cas similaires d'un enregistrement invisible répondent 404 | ✅ | |
 | RAG-09 | Depuis les cas similaires d'un incident, **relier** l'article ou le problème retenu à l'incident en un clic (achève INC-19) : bouton « Relier » sur les articles et les problèmes des cas similaires d'un incident | ✅ | 2 |
