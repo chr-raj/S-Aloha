@@ -86,7 +86,7 @@ Détail : [sécurité § Points de durcissement](reference/securite.md#points-de
 
 | # | Chantier | Qui |
 |---|---|---|
-| S1 | **Secrets hors du dépôt** (`Jwt:Key`, mots de passe PostgreSQL et LDAP) | code + action |
+| S1 | **Secrets hors du dépôt** (`Jwt:Key`, mots de passe PostgreSQL et LDAP) — part *code*, premier geste fait le 2026-11-09 : `docker-compose.yml` lit `POSTGRES_PASSWORD`, `JWT_KEY` et `DISCOVERY_VAULT_KEY` dans l'environnement, vides à défaut ; valeurs d'exemple réservées à `docker-compose.demo.yml` ([exploitation § Secrets](reference/exploitation.md#secrets)). Reste : le mot de passe LDAP d'exemple du compose, et l'*action* de l'exploitant (fournir ses secrets) | code + action |
 | S2 | **LDAPS** et **HTTPS** | action |
 | S3 | ~~**CORS** restreint~~ — fait le 2026-10-29 (`Cors:AllowedOrigins`, vide par défaut, [#122](https://github.com/chrraj7/S-Aloha/issues/122)) ; API et Swagger non publiés hors de nginx | code |
 | ~~S7~~ | ~~Refus de démarrer hors développement avec les valeurs d'exemple~~ — soldé le 2026-10-16 (`SampleSecrets` ; démonstration : `Security:AllowSampleSecrets`) ([audit du 2026-10-16](archives/audit-code-2026-10-16.md) § 1) | code |

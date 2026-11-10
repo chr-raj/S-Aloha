@@ -2,7 +2,7 @@ namespace SAloha.Api.Core.Auth;
 
 /// <summary>
 /// S7 : hors développement, l'API refuse de démarrer avec les valeurs d'exemple livrées dans
-/// <c>appsettings.json</c> et <c>docker-compose.yml</c> — une clé JWT connue de tous permet de
+/// <c>appsettings.json</c> et <c>docker-compose.demo.yml</c> — une clé JWT connue de tous permet de
 /// fabriquer des jetons valides. Le mode démonstration, public par construction, l'accepte
 /// explicitement (<c>Security:AllowSampleSecrets</c>) et le journalise en avertissement.
 /// </summary>
