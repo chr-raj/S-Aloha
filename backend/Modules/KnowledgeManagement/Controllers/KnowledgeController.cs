@@ -97,6 +97,17 @@ public class KnowledgeController(AppDbContext db) : RecordController<KnowledgeAr
                                  || (dto.Content ?? "") != e.Content || dto.ArticleType != e.ArticleType)
             ? "Brouillon" : null;
 
+    /// <summary>
+    /// KB-03, KB-16 (décision tacite du 2026-11-09, #215) : la retouche d'un gestionnaire vaut
+    /// publication, sauf s'il serait le seul rédacteur de la nouvelle version (hors Admin) :
+    /// l'article repasse en brouillon, un autre gestionnaire le republie.
+    /// </summary>
+    protected override async Task<string?> StatusAfterManagerEditAsync(KnowledgeArticle e, KnowledgeArticleDto dto)
+    {
+        if (StatusAfterEdit(e, dto) is null || User.IsInRole("Admin")) return null;
+        return (await WritersAsync(e)).All(w => w == Me.ToLowerInvariant()) ? "Brouillon" : null;
+    }
+
     // KB-20 : publication → rédacteur (la soumission est notifiée par Submit).
     protected override void OnNotify(KnowledgeArticle e, string? from, Notifier n)
     {

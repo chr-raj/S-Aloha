@@ -73,7 +73,7 @@ stateDiagram-v2
 |---|---|---|---|---|
 | — → Brouillon | Tous | Titre, type | Référence | ✅ |
 | Brouillon → Publié | Manager | Contenu renseigné | `PublishedAt`, `PublishedBy` ; `ReviewDate` par défaut (KB-11) ; soumission soldée ; version + 1, conservée (KB-15) ; quatre yeux (KB-16) | ✅ |
-| Publié → Brouillon | Auto | Retouche du titre, résumé, contenu ou type par un User | Publication effacée | ✅ |
+| Publié → Brouillon | Auto | Retouche du titre, résumé, contenu ou type par un User, ou par un gestionnaire non Admin qui en serait le seul rédacteur (KB-16) | Publication effacée | ✅ |
 | Publié → Archivé | Manager | | Demande d'archivage soldée ; retiré des suggestions et de la recherche par défaut | ✅ KB-18 |
 | Archivé → Brouillon | Manager | | | ✅ KB-18 |
 | Brouillon → Archivé | Manager | Abandon d'un brouillon | | ✅ KB-18 |
@@ -84,7 +84,7 @@ stateDiagram-v2
 |---|---|---|---|
 | KB-01 | Types d'article : Solution, Procédure, Erreur connue, FAQ ; résumé, contenu, mots-clés, date de revue | ✅ | |
 | KB-02 | **Publié** : gestionnaire uniquement, contenu obligatoire ; horodate `PublishedAt` / `PublishedBy`, effacés au retour en Brouillon | ✅ | |
-| KB-03 | **Retoucher un article publié** (titre, résumé, contenu ou type) le ramène en **Brouillon** ; la retouche par un gestionnaire vaut publication ; mots-clés, date de revue et responsable se modifient librement | ✅ | |
+| KB-03 | **Retoucher un article publié** (titre, résumé, contenu ou type) le ramène en **Brouillon** ; la retouche par un gestionnaire vaut publication, sauf s'il serait le seul rédacteur de la nouvelle version (KB-16, hors Admin) : l'article repasse alors en Brouillon (décision tacite du 2026-11-09, #215) ; mots-clés, date de revue et responsable se modifient librement | ✅ | |
 | KB-04 | La **recherche** du registre porte sur le titre, la référence, les mots-clés et le contenu, sans tenir compte de la casse ; le registre ne renvoie pas le contenu (SOC-13). En tête du registre, le bloc « **Chercher d'abord** » interroge la **recherche hybride** (mots et sens) sur les articles publiés, problèmes établis et incidents résolus ([RAG-05](../recherche.md)) | ✅ | |
 | KB-05 | **Revue échue** : un article Publié dont la date de revue est passée remonte dans « Relances » des gestionnaires | ✅ | |
 | KB-10 | Le contenu est rendu en **Markdown** (titres, listes, code, citations, gras, italique, liens http(s) et mailto), sans interpréter de HTML brut ; onglet **Lecture** de la fiche | ✅ | |
@@ -93,7 +93,7 @@ stateDiagram-v2
 | KB-13 | **Retour des lecteurs** : « utile / pas utile » sur un article publié, un vote par utilisateur ; 3 « pas utile » de plus que d'« utile » le signalent en relance à son responsable | ✅ (vote modifiable ; signalé : notification au responsable au franchissement du seuil, console du responsable, Mon travail, et des gestionnaires, Relances ; une nouvelle publication repart sans votes) | 3 |
 | KB-14 | **Utilisation** : nombre d'incidents et de demandes reliés à l'article (INC-19), affiché sur la fiche | ✅ | |
 | KB-15 | **Versions** : chaque publication conserve la version précédente (contenu, auteur, date), consultable sur la fiche | ✅ (chaque publication est gardée : numéro, contenu, rédacteurs, publieur, date ; la retouche d'un article publié par un gestionnaire le republie en nouvelle version ; encadré « Versions publiées » de la fiche) | 3 |
-| KB-16 | **Quatre yeux** : un gestionnaire ne publie pas un article dont il est le seul rédacteur, sauf Admin | ✅ (rédacteurs : le créateur et quiconque a modifié le titre, le résumé, le type ou le contenu, d'après le journal d'audit ; 400 sinon) | 3 |
+| KB-16 | **Quatre yeux** : un gestionnaire ne publie pas un article dont il est le seul rédacteur, sauf Admin | ✅ (rédacteurs : le créateur et quiconque a modifié le titre, le résumé, le type ou le contenu, d'après le journal d'audit ; 400 sinon ; vaut aussi à chaque republication : la retouche d'un article publié par son seul rédacteur le ramène en Brouillon, KB-03) | 3 |
 | KB-17 | **Revue** : à la date de revue, le responsable (en personne ou par son groupe AD) ou un gestionnaire confirme l'article (nouvelle date de revue, un an par défaut, sans repasser en Brouillon) ou demande son archivage, motivé ; la demande remonte dans « Décisions » des gestionnaires | ✅ | |
 | KB-18 | **Archiver** et réactiver : gestionnaire uniquement ; transitions selon le § 4 (SOC-05) | ✅ | |
 
@@ -144,7 +144,7 @@ responsable, KB-13) ; mes articles (Mon travail).
 ## 10. Scénarios d'acceptation
 
 - **KB-02** — *Étant donné* un brouillon sans contenu, *quand* un Manager le publie, *alors* 400 ; un User qui publie, 403.
-- **KB-03** — *Étant donné* un article Publié, *quand* un User modifie son contenu, *alors* il repasse Brouillon, `PublishedAt` vide ; s'il ne modifie que les mots-clés, il reste Publié.
+- **KB-03** — *Étant donné* un article Publié, *quand* un User modifie son contenu, *alors* il repasse Brouillon, `PublishedAt` vide ; s'il ne modifie que les mots-clés, il reste Publié. *Étant donné* un article Publié dont un gestionnaire non Admin est le seul rédacteur, *quand* il en réécrit le contenu, *alors* il repasse Brouillon sans nouvelle version ; retouché par un autre gestionnaire, il reste Publié avec une version de plus.
 - **KB-10** — *Étant donné* un contenu « `# Étapes` » et « `<script>` », *alors* la fiche affiche un titre et le texte `<script>` échappé.
 - **KB-11** — *Quand* un Manager publie un article sans date de revue le 7 octobre 2026, *alors* sa date de revue est le 7 octobre 2027.
 - **KB-17** — *Étant donné* un article Publié dont Fara est responsable, *quand* Fara confirme l'article sans date, *alors* il reste Publié et sa revue passe à dans un an ; un autre User, 403.

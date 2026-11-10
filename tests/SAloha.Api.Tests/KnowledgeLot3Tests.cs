@@ -53,6 +53,35 @@ public class KnowledgeLot3Tests(ApiFixture api)
     }
 
     [Fact]
+    public async Task KB_03_KB_16_le_seul_redacteur_gestionnaire_qui_retouche_son_article_publie_le_renvoie_en_brouillon()
+    {
+        var auteur = api.Client("Manager", "auteur.kb03");
+        var relecteur = api.Client("Manager", "relecteur.kb03");
+        var a = await Json(await auteur.PostAsJsonAsync("/api/knowledge", Article("Brouillon court")));
+        var url = $"/api/knowledge/{Id(a)}";
+        Assert.Equal(1, (await Json(await relecteur.PutAsJsonAsync(url, Article("Brouillon court", "Publié")))).GetProperty("version").GetInt32());
+
+        // Seul rédacteur : sa réécriture ne vaut pas publication, l'article repasse en brouillon.
+        var rewritten = await Json(await auteur.PutAsJsonAsync(url, Article("Contenu entièrement réécrit", "Publié")));
+        Assert.Equal(("Brouillon", 1), (rewritten.GetProperty("status").GetString(), rewritten.GetProperty("version").GetInt32()));
+        Assert.Single((await Json(await auteur.GetAsync($"{url}/versions"))).EnumerateArray());
+        // Mots-clés seuls : l'article publié le reste (KB-03), même pour le seul rédacteur.
+        var other = await Json(await auteur.PostAsJsonAsync("/api/knowledge", Article("Autre procédure")));
+        await Json(await relecteur.PutAsJsonAsync($"/api/knowledge/{Id(other)}", Article("Autre procédure", "Publié")));
+        var tagged = new
+        {
+            title = "Réinitialiser un mot de passe", description = "", articleType = "Procédure", content = "Autre procédure",
+            keywords = "mot de passe", status = "Publié", ownerType = "User", ownerId = "responsable.kb13", ownerDisplayName = "responsable.kb13"
+        };
+        Assert.Equal("Publié", (await Json(await auteur.PutAsJsonAsync($"/api/knowledge/{Id(other)}", tagged))).GetProperty("status").GetString());
+
+        // Témoin : un autre gestionnaire republie (version 2) ; sa propre retouche vaut publication (version 3).
+        Assert.Equal(2, (await Json(await relecteur.PutAsJsonAsync(url, Article("Contenu entièrement réécrit", "Publié")))).GetProperty("version").GetInt32());
+        var retouched = await Json(await relecteur.PutAsJsonAsync(url, Article("Contenu réécrit et relu", "Publié")));
+        Assert.Equal(("Publié", 3), (retouched.GetProperty("status").GetString(), retouched.GetProperty("version").GetInt32()));
+    }
+
+    [Fact]
     public async Task KB_13_trois_pas_utile_de_plus_que_d_utile_signalent_l_article_a_son_responsable()
     {
         var chef = api.Client("Manager", "chef.kb13");
