@@ -1,0 +1,15 @@
+# HTTPS devant S-Aloha (S2). Utilisé par docker-compose.https.yml ; mode d'emploi :
+# docs/reference/exploitation.md § HTTPS.
+#
+# S_ALOHA_HOST : nom sous lequel les utilisateurs ouvrent S-Aloha (défaut : localhost).
+# S_ALOHA_TLS  : d'où vient le certificat, selon la valeur :
+#   internal                        autorité interne de Caddy (défaut ; à faire approuver par les postes)
+#   adresse@exemple.org             Let's Encrypt, automatique (nom public, ports 80 et 443 joignables)
+#   /certs/serveur.pem /certs/cle.pem   votre certificat et sa clé, déposés dans https/certs/
+{$S_ALOHA_HOST:localhost} {
+	tls {$S_ALOHA_TLS:internal}
+	encode zstd gzip
+	# Caddy transmet X-Forwarded-Proto: https ; nginx (service web) le relaie à l'API, qui pose
+	# alors le cookie de session « Secure » (exploitation.md § Session et HTTPS).
+	reverse_proxy web:80
+}
