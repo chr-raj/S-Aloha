@@ -31,7 +31,9 @@ public class RequestTasksTests(ApiFixture api)
         }
     }));
 
-    private static object Request(string title, int item, string? status = null) => new { title, requestedItem = "", catalogItemId = item, status };
+    // Le groupe d'exécution du modèle, responsable dès l'approbation (REQ-23) : renvoyé avec la fiche (REQ-13).
+    private static object Request(string title, int item, string? status = null) => new { title, requestedItem = "", catalogItemId = item, status,
+        ownerType = "Group", ownerId = "GRP-POSTES", ownerDisplayName = "GRP-POSTES" };
 
     private async Task<List<JsonElement>> Tasks(HttpClient c, int request) =>
         (await Json(await c.GetAsync($"/api/requests/{request}/tasks"))).EnumerateArray().ToList();

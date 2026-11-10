@@ -150,6 +150,10 @@ public class ServiceRequestsController(AppDbContext db) : RecordController<Servi
     {
         if (e.ApprovedAt is null && status is "En cours" or "Satisfaite" or "Close")
             return "La demande doit d'abord être approuvée par un gestionnaire.";
+        // REQ-13 : une demande en cours a quelqu'un pour la satisfaire. Le groupe d'exécution du
+        // modèle est déjà responsable à l'approbation (REQ-23) : reste la demande libre.
+        if (e.Status == "Approuvée" && status == "En cours" && string.IsNullOrWhiteSpace(e.OwnerId))
+            return "Désigner le responsable de la demande avant de la passer En cours.";
         // REQ-06 : un rejet se motive, le motif est communiqué au demandeur.
         if (status == "Rejetée" && e.RejectionReason is null)
             return "Motiver le rejet : le motif est communiqué au demandeur.";

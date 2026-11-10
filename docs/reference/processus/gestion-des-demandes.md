@@ -102,7 +102,7 @@ approbation ; seules les transitions ci-dessous sont permises (SOC-05).
 | Soumise → Approuvée | Manager | | `ApprovedAt`, `ApprovedBy` | ✅ |
 | Soumise → Rejetée | Manager | Motif de rejet | | ✅ (motif) |
 | Soumise, Approuvée → Annulée | Demandeur, Manager | Pas encore En cours | `CancelledAt` | ✅ REQ-09 |
-| Approuvée → En cours | Tous | Responsable renseigné | | ✅ (approbation exigée) / 🔜 (responsable) |
+| Approuvée → En cours | Tous | Responsable renseigné | | ✅ REQ-03 (approbation exigée), REQ-13 (responsable) |
 | En cours → Satisfaite | Responsable, Manager | Toutes les tâches Terminée ou Annulée | `FulfilledAt` | ✅ REQ-25 (responsable avant la modification, ou membre du groupe responsable ; sinon 400) |
 | Satisfaite → En cours | Demandeur, bénéficiaire, Manager | Motif (`ContestReason`) ; dans les 5 jours ouvrés | `FulfilledAt` effacé ; responsable notifié | ✅ REQ-10 |
 | Satisfaite → Close | Demandeur, Manager, ou auto après 5 jours ouvrés | | `ClosedAt` ; `AutoClosed` si automatique, demandeur notifié | ✅ REQ-11 |
@@ -124,6 +124,7 @@ approbation ; seules les transitions ci-dessous sont permises (SOC-05).
 | REQ-10 | **Contestation** : dans les 5 jours ouvrés, le demandeur ou le bénéficiaire renvoie une demande Satisfaite En cours, avec motif | ✅ | 2 |
 | REQ-11 | **Clôture** à la confirmation du demandeur, ou automatique 5 jours ouvrés après Satisfaite | ✅ | 3 |
 | REQ-12 | Une demande qui révèle un **besoin non standard** se requalifie : créer un changement (ou un incident) relié, puis annuler la demande avec ce motif (`CancelReason`, qui cite la référence créée) ; demandeur ou gestionnaire, demande Soumise ou Approuvée (mêmes droits que REQ-09) | ✅ (l'incident créé reprend le service de la demande et reçoit dès sa création ses échéances de résolution et de prise en charge, INC-21, SLM-13) | 2 |
+| REQ-13 | **En cours** exige un **responsable** : une demande approuvée sans responsable ne passe pas En cours (400 « Désigner le responsable… ») ; une demande du catalogue reçoit à l'approbation le groupe d'exécution de son modèle (REQ-23), le geste ne vaut donc que pour une demande libre ou un modèle sans groupe | ✅ | 1 |
 
 ### Catalogue de demandes
 

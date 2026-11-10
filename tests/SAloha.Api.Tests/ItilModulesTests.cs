@@ -35,8 +35,9 @@ public class ItilModulesTests(ApiFixture api)
         ownerType = "User", ownerId = owner ?? "hery.rakoto", ownerDisplayName = owner ?? "Hery Rakoto"
     };
 
-    private static object Request(string title, string? status = null) =>
-        new { title, status, requestedItem = "Accès VPN" };
+    private static object Request(string title, string? status = null, string? owner = null) =>
+        new { title, status, requestedItem = "Accès VPN",
+            ownerType = owner is null ? null : "User", ownerId = owner, ownerDisplayName = owner };
 
     // Créneau fixe : un créneau qui bougerait à chaque appel serait une
     // modification du changement, qui retire son autorisation (F10).
@@ -135,7 +136,14 @@ public class ItilModulesTests(ApiFixture api)
 
         var approved = await Json(await Put(api.Client("Manager"), "/api/requests", Id(r), Request("Approbation", "Approuvée")));
         Assert.NotEqual(JsonValueKind.Null, approved.GetProperty("approvedAt").ValueKind);
-        await Json(await Put(user, "/api/requests", Id(r), Request("Approbation", "En cours")));
+        // REQ-13 : une demande libre approuvée sans responsable ne passe pas En cours.
+        var refused = await Put(user, "/api/requests", Id(r), Request("Approbation", "En cours"));
+        Assert.Equal(HttpStatusCode.BadRequest, refused.StatusCode);
+        Assert.Contains("responsable", (await refused.Content.ReadAsStringAsync()).ToLowerInvariant());
+        Assert.Equal("Approuvée", Str(await Json(await user.GetAsync($"/api/requests/{Id(r)}")), "status"));
+        // Responsable désigné : elle passe En cours (même envoi).
+        var started = await Json(await Put(user, "/api/requests", Id(r), Request("Approbation", "En cours", Me)));
+        Assert.Equal("En cours", Str(started, "status"));
     }
 
     [Fact]
