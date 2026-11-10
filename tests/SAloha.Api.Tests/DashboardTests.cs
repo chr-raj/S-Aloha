@@ -167,7 +167,8 @@ public class DashboardTests(ApiFixture api)
             name = $"Badge {_svc}", description = "d", serviceId = Id(svc), requiresApproval = true, targetHours = 1000, fulfillmentGroup = "GRP-ACCUEIL"
         }));
         var requester = api.Client("User", "demandeur.rep60");
-        object R(string? status, string? reason = null, DateTime? due = null) => new { title = "Badge", requestedItem = "", catalogItemId = Id(item), status, rejectionReason = reason, dueDate = due };
+        object R(string? status, string? reason = null, DateTime? due = null) => new { title = "Badge", requestedItem = "", catalogItemId = Id(item), status, rejectionReason = reason, dueDate = due,
+            ownerType = "Group", ownerId = "GRP-ACCUEIL", ownerDisplayName = "GRP-ACCUEIL" };   // REQ-13 : responsable renvoyé avec la fiche
         async Task<int> Create() => Id(await Json(await requester.PostAsJsonAsync("/api/requests", R(null))));
         // Une mise à jour renvoie l'échéance calculée à l'approbation (REQ-22).
         async Task Move(HttpClient c, int id, string status)

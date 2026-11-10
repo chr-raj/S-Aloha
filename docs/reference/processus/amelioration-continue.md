@@ -86,7 +86,7 @@ stateDiagram-v2
 | En cours → Réalisée | Porteur, Manager | Résultat constaté ; étape ≥ 6 | `CompletedAt` | ✅ (résultat ; étape : CSI-16 ; qui : comme l'engagement, #264) |
 | Proposée, Validée, En cours → Abandonnée | Manager | Motif | Validation retirée | ✅ |
 | Abandonnée → Proposée | Tous | | Nouvelle validation nécessaire | ✅ |
-| Réalisée → … | — | Statut final | | 🔜 CSI-11 |
+| Réalisée → … | — | Statut final | | ✅ CSI-11 |
 
 ## 5. Règles de gestion
 

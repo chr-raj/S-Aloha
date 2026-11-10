@@ -15,7 +15,7 @@
 | [Socle commun](../regles-metier.md) | SOC | 27 | 0 | 0 | 0 |
 | [Gestion des problèmes](gestion-des-problemes.md) | PRB | 30 | 0 | 0 | 0 |
 | [Gestion des incidents](gestion-des-incidents.md) | INC | 32 | 0 | 0 | 0 |
-| [Gestion des demandes de service](gestion-des-demandes.md) | REQ | 21 | 0 | 0 | 0 |
+| [Gestion des demandes de service](gestion-des-demandes.md) | REQ | 22 | 0 | 0 | 0 |
 | [Habilitation des changements](habilitation-des-changements.md) | CHG | 27 | 0 | 0 | 0 |
 | [Gestion de la configuration](gestion-de-la-configuration.md) | CFG | 39 | 0 | 0 | 0 |
 | [Gestion des niveaux de service](gestion-des-niveaux-de-service.md) | SLM | 17 | 0 | 0 | 0 |
@@ -27,7 +27,7 @@
 | [Périmètres](../perimetres.md) | PER | 13 | 0 | 0 | 0 |
 | [Recherche](../recherche.md) | RAG | 11 | 1 | 0 | 1 |
 | [Reporting](../reporting.md) | REP | 34 | 0 | 0 | 0 |
-| **Total** | | **341** | **1** | **0** | **1** |
+| **Total** | | **342** | **1** | **0** | **1** |
 
 *Comptes au 2026-11-03 (main `dcaecc0`, avec SLM-16), sur les tableaux de règles (hors indicateurs). Une
 règle faite en partie compte ✅ (7 règles, la part restante est décrite dans son statut).
