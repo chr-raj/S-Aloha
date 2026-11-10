@@ -196,7 +196,9 @@ Ouvrez **http://localhost** et connectez-vous avec l'un des comptes de démonstr
 | `demo.user` | `Demo-User-2026` | Utilisateur |
 
 **Avec votre Active Directory** : renseignez-le dans `docker-compose.yml` (variables
-`Ldap__*` du service `api`), puis `docker compose up -d --build`. Les utilisateurs doivent
+`Ldap__*` du service `api`), fournissez les secrets hors du dépôt (`POSTGRES_PASSWORD`, `JWT_KEY`,
+`DISCOVERY_VAULT_KEY` : [exploitation § Secrets](docs/reference/exploitation.md#secrets)), puis
+`docker compose --env-file <fichier> up -d --build`. Les utilisateurs doivent
 appartenir à l'un des groupes `GRP-SALOHA-ADMINS`, `GRP-SALOHA-MANAGERS` ou
 `GRP-SALOHA-USERS` (noms configurables). Détails : [guide d'exploitation](docs/reference/exploitation.md).
 

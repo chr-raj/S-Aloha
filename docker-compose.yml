@@ -7,7 +7,9 @@ services:
     environment:
       POSTGRES_DB: saloha
       POSTGRES_USER: saloha
-      POSTGRES_PASSWORD: ChangeMe_Str0ng!
+      # S1 : aucun secret dans ce fichier ; à fournir par l'environnement ou un fichier .env
+      # (docs/reference/exploitation.md § Secrets). Vide : PostgreSQL refuse de démarrer.
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -23,7 +25,7 @@ services:
       db:
         condition: service_healthy
     environment:
-      ConnectionStrings__Default: "Host=db;Database=saloha;Username=saloha;Password=ChangeMe_Str0ng!"
+      ConnectionStrings__Default: "Host=db;Database=saloha;Username=saloha;Password=${POSTGRES_PASSWORD:-}"
       # --- Active Directory on-prem : à adapter ---
       Ldap__Host: "dc01.mondomaine.local"
       Ldap__Port: "389"
@@ -36,10 +38,12 @@ services:
       Ldap__Groups__Admin: "GRP-SALOHA-ADMINS"
       Ldap__Groups__Manager: "GRP-SALOHA-MANAGERS"
       Ldap__Groups__User: "GRP-SALOHA-USERS"
-      Jwt__Key: "CHANGEZ-CETTE-CLE-SECRETE-DE-64-CARACTERES-MINIMUM-0123456789ab"
+      # S1 : vide, l'API refuse de démarrer hors développement (moins de 64 caractères, S7).
+      Jwt__Key: "${JWT_KEY:-}"
       # --- Découverte automatique (CFG-45) : clé du coffre d'identifiants, hors de la base ---
       # À changer avant le premier identifiant enregistré : la changer ensuite rend les secrets illisibles.
-      Discovery__VaultKey: "CHANGEZ-CETTE-CLE-DU-COFFRE-DE-32-CARACTERES-MINIMUM-0123456789"
+      # Vide : le coffre refuse d'enregistrer un identifiant (S1).
+      Discovery__VaultKey: "${DISCOVERY_VAULT_KEY:-}"
       # --- Recherche hybride (ADR-0013) : service d'embeddings ci-dessous ---
       # Vide : recherche par les mots seulement. L'API n'attend pas ce service.
       Embeddings__Url: "http://embeddings:11434"
@@ -57,7 +61,7 @@ services:
   embeddings:
     # Embeddings bge-m3 servis par Ollama, hors du processus de l'API (ADR-0013).
     # Premier démarrage : téléchargement du modèle (~1,2 Go), gardé dans le volume.
-    image: ollama/ollama:0.40.1
+    image: ollama/ollama:0.40.15
     entrypoint: ["/bin/sh", "-c", "ollama serve & until ollama list >/dev/null 2>&1; do sleep 1; done; ollama pull bge-m3 && wait"]
     volumes:
       - ollama:/root/.ollama
@@ -68,7 +72,7 @@ services:
     # Pièces jointes (SOC-25, ADR-0020) : stockage compatible S3, démarré seulement avec le
     # profil « pieces-jointes ». Réglage dans Administration › Messagerie et stockage :
     # adresse http://garage:3900, région garage (docs/reference/exploitation.md).
-    image: dxflrs/garage:v2.1.0
+    image: dxflrs/garage:v2.5.0
     profiles: ["pieces-jointes"]
     environment:
       # Obligatoire avec le profil (sinon Garage refuse de démarrer) : openssl rand -hex 32.

@@ -189,6 +189,11 @@ public class IncidentsController(AppDbContext db) : RecordController<Incident, I
         }
         if (e.Status != "En attente") e.OnHoldReason = null;
         if (!creating && e.Status == "Résolu" && from is not null && !Incident.Done.Contains(from)) await ResolveChildrenAsync(e);
+        // PER-07, DRG-01 : la lecture des déclarations filtre sur le périmètre copié dans chacune ;
+        // il suit l'incident déplacé, dans le même enregistrement.
+        if (!creating && entry.Property(x => x.PerimeterId).IsModified)
+            foreach (var declaration in await Db.RegulatoryNotifications.Where(d => d.IncidentId == e.Id).ToListAsync())
+                declaration.PerimeterId = e.PerimeterId;
         if (creating || resumed || entry.Property(x => x.Priority).IsModified || entry.Property(x => x.AffectedService).IsModified
             || entry.Property(x => x.ServiceId).IsModified || e.ResolutionDueAt is null)
         {
@@ -283,15 +288,23 @@ public class IncidentsController(AppDbContext db) : RecordController<Incident, I
     }
 
     /// <summary>
-    /// PER-07, INC-16 (décision du mainteneur du 2026-11-04) : un enfant ne quitte pas le
-    /// périmètre de son parent ; on le détache d'abord, aucun lien ne change en silence.
+    /// PER-07, INC-16 (décisions du mainteneur du 2026-11-04 et du 2026-11-09) : un enfant ne
+    /// quitte pas le périmètre de son parent, ni un parent celui de ses enfants ; on détache
+    /// d'abord (un enfant rattaché ne se déplace pas seul), aucun lien entre deux périmètres ne
+    /// se crée en silence.
     /// </summary>
     protected override async Task<string?> CheckMoveAsync(Incident e, int to)
     {
-        if (e.ParentId is not int pid) return null;
-        var parent = await Db.Incidents.AsNoTracking().Where(x => x.Id == pid).Select(x => new { x.Reference, x.PerimeterId }).FirstOrDefaultAsync();
-        return parent is null || parent.PerimeterId == to ? null
-            : $"Rattaché à {parent.Reference}, d'un autre périmètre : détacher d'abord l'incident de son parent pour le déplacer.";
+        if (e.ParentId is int pid)
+        {
+            var parent = await Db.Incidents.AsNoTracking().Where(x => x.Id == pid).Select(x => new { x.Reference, x.PerimeterId }).FirstOrDefaultAsync();
+            if (parent is not null && parent.PerimeterId != to)
+                return $"Rattaché à {parent.Reference}, d'un autre périmètre : détacher d'abord l'incident de son parent pour le déplacer.";
+        }
+        // Le nombre seul : les références des enfants d'un autre périmètre ne sont pas forcément visibles (PER-05).
+        var children = await Db.Incidents.CountAsync(x => x.ParentId == e.Id && x.PerimeterId != to);
+        return children == 0 ? null
+            : $"{e.Reference} a {children} incident(s) enfant(s) qui resteraient dans un autre périmètre : les détacher d'abord pour déplacer le parent.";
     }
 
     /// <summary>
