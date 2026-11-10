@@ -68,7 +68,7 @@ services:
     # Pièces jointes (SOC-25, ADR-0020) : stockage compatible S3, démarré seulement avec le
     # profil « pieces-jointes ». Réglage dans Administration › Messagerie et stockage :
     # adresse http://garage:3900, région garage (docs/reference/exploitation.md).
-    image: dxflrs/garage:v2.1.0
+    image: dxflrs/garage:v2.5.0
     profiles: ["pieces-jointes"]
     environment:
       # Obligatoire avec le profil (sinon Garage refuse de démarrer) : openssl rand -hex 32.
