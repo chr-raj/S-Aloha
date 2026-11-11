@@ -18,23 +18,13 @@ public class SearchController(AppDbContext db, HybridSearch search, IEmbeddingCl
     PerimeterAccess access) : ControllerBase
 {
     /// <summary>
-    /// PER-09 : seuls les résultats visibles de l'utilisateur (ses périmètres, articles publiés).
-    /// Le filtre vient après le classement : on demande trois fois plus de candidats.
+    /// RAG-13, PER-09 : périmètres visibles de l'utilisateur (null : tous, Admin), filtrés dans les
+    /// requêtes de la recherche, avant le classement.
     /// </summary>
-    private async Task<List<HybridSearch.Hit>> VisibleAsync(List<HybridSearch.Hit> hits, int limit)
+    private async Task<IReadOnlyCollection<int>?> PerimetersAsync()
     {
         var scope = await access.GetAsync();
-        if (scope.Global) return hits.Take(limit).ToList();
-        var visible = new HashSet<(string, int)>();
-        foreach (var group in hits.GroupBy(h => h.Type))
-        {
-            var kind = ItemLinks.ByType(group.Key);
-            if (kind is null) continue;
-            var ids = group.Select(h => h.Id).ToList();
-            foreach (var t in await kind.Query(db).Where(t => ids.Contains(t.Id)).ToListAsync())
-                if (scope.Sees(t)) visible.Add((group.Key, t.Id));
-        }
-        return hits.Where(h => visible.Contains((h.Type, h.Id))).Take(limit).ToList();
+        return scope.Global ? null : scope.Ids;
     }
 
     private static IReadOnlyCollection<string> TypesOf(string? types) =>
@@ -49,7 +39,7 @@ public class SearchController(AppDbContext db, HybridSearch search, IEmbeddingCl
     {
         if (string.IsNullOrWhiteSpace(q)) return Ok(Array.Empty<object>());
         var max = Math.Clamp(limit, 1, 50);
-        return Ok(await VisibleAsync(await search.SearchAsync(q.Trim(), TypesOf(types), null, max * 3), max));
+        return Ok(await search.SearchAsync(q.Trim(), TypesOf(types), await PerimetersAsync(), null, max));
     }
 
     /// <summary>
@@ -65,7 +55,7 @@ public class SearchController(AppDbContext db, HybridSearch search, IEmbeddingCl
         if (doc is null || source is null || !(await access.GetAsync()).Sees(source)) return NotFound();
         var query = doc.Title + "\n" + (doc.Text.Length > 2000 ? doc.Text[..2000] : doc.Text);
         var max = Math.Clamp(limit, 1, 20);
-        return Ok(await VisibleAsync(await search.SearchAsync(query, TypesOf(types), (type, id), max * 3, lexicalQuery: doc.Title), max));
+        return Ok(await search.SearchAsync(query, TypesOf(types), await PerimetersAsync(), (type, id), max, lexicalQuery: doc.Title));
     }
 
     /// <summary>État de l'index et du service d'embeddings (RAG-08, Admin).</summary>

@@ -128,4 +128,38 @@ public class PerimeterViewsTests(ApiFixture api)
         Assert.False(await Finds(tiana));   // Siège seulement
         Assert.Equal(HttpStatusCode.NotFound, (await tiana.GetAsync($"/api/search/similar?type=incident&id={Id(inc)}")).StatusCode);
     }
+    [Fact]
+    public async Task RAG_13_le_filtre_des_perimetres_precede_le_classement()
+    {
+        var (siege, usine, _, _) = await Setup("rag13");
+        var admin = api.Client();
+        await Json(await admin.PostAsJsonAsync($"/api/admin/perimeters/{usine}/assignments",
+            new { principalType = "User", principalId = "fara.rag13", principalDisplayName = "Fara", role = "User" }));
+        var fara = api.Client("User", "fara.rag13");   // Usine seulement
+        async Task<JsonElement> Resolved(string title, int p)
+        {
+            var e = await Json(await admin.PostAsJsonAsync("/api/incidents", Incident(title, p)));
+            return await Json(await admin.PutAsJsonAsync($"/api/incidents/{Id(e)}", Incident(title, p, status: "Résolu")));
+        }
+        // Le Siège occupe la tête du classement ; l'incident de l'Usine vient après.
+        var siegeHits = new List<JsonElement>();
+        for (var i = 0; i < 4; i++) siegeHits.Add(await Resolved($"Rotative kq77 kq77 kq77 bloquée {i}", siege));
+        var usineHit = await Resolved("Rotative kq77", usine);
+
+        async Task<List<string>> Refs(HttpClient c, int limit) => (await Json(await c.GetAsync($"/api/search?q=kq77&limit={limit}")))
+            .EnumerateArray().Select(h => h.GetProperty("reference").GetString()!).ToList();
+        // L'indexation est asynchrone : on attend que l'Admin les trouve tous.
+        for (var i = 0; i < 50 && (await Refs(admin, 50)).Count < 5; i++) await Task.Delay(200);
+        Assert.Equal(5, (await Refs(admin, 50)).Count);
+        Assert.DoesNotContain(Ref(usineHit), (await Refs(admin, 3)));   // témoin : hors des trois premiers
+
+        // Un seul résultat demandé : celui de l'Usine, plus loin que trois fois la limite.
+        Assert.Equal([Ref(usineHit)], await Refs(fara, 1));
+
+        // PER-07 : un enregistrement déplacé se trouve depuis le nouveau périmètre dès le déplacement.
+        var moved = siegeHits[0];
+        await Json(await admin.PutAsJsonAsync($"/api/incidents/{Id(moved)}", Incident(moved.GetProperty("title").GetString()!, usine, status: "Résolu")));
+        Assert.Contains(Ref(moved), await Refs(fara, 10));
+        Assert.Equal(2, (await Refs(fara, 10)).Count);
+    }
 }
