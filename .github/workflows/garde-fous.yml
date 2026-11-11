@@ -12,8 +12,13 @@ permissions:
   contents: read
 
 # Concurrence par job : une étiquette posée juste après l'ouverture ne doit annuler que
-# l'ancien contrôle Garde-fous, jamais la classe de risque (qui ne tourne pas sur
-# `labeled` et serait perdue : #243, 2026-11-03).
+# l'ancien contrôle Garde-fous, jamais la classe de risque (#243, 2026-11-03). Depuis le
+# 2026-11-11, la classe se recalcule aussi sur `labeled` et `unlabeled` : une écriture qui
+# REMPLACE la liste des étiquettes (pose d'`a-verifier` par l'API « set labels ») avait
+# effacé `risque-sensible` de #298 et `risque-code` de #299 à la seconde où le workflow les
+# avait posées ; sans classe, ANDRANA ne fusionne pas. Le dépôt est public : ces
+# exécutions ne coûtent rien. Reposer une étiquette déjà présente n'émet pas d'événement,
+# le recalcul converge.
 jobs:
   garde-fous:
     name: Garde-fous
@@ -37,8 +42,9 @@ jobs:
 
   risque:
     name: Classe de risque
-    # Ni fork ni Dependabot : leur jeton est en lecture seule.
-    if: github.event.action != 'labeled' && github.event.action != 'unlabeled' && github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login != 'dependabot[bot]'
+    # Ni fork ni Dependabot : leur jeton est en lecture seule. Tous les événements, y compris
+    # `labeled` et `unlabeled` : la classe doit survivre à une étiquette posée par-dessus.
+    if: github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.user.login != 'dependabot[bot]'
     concurrency:
       group: risque-${{ github.event.pull_request.number }}
       cancel-in-progress: true
@@ -62,7 +68,14 @@ jobs:
           classe=$(python3 scripts/garde-fous.py "$BASE" "$HEAD" --risque)
           echo "Classe : $classe"
           # API REST : `gh pr edit` échoue sur la dépréciation des Projects classiques.
+          actuelles=$(gh api "repos/$GITHUB_REPOSITORY/issues/$PR/labels" --jq '[.[].name] | join(",")')
           for e in risque-doc risque-code risque-sensible; do
-            if [ "$e" != "$classe" ]; then gh api -X DELETE "repos/$GITHUB_REPOSITORY/issues/$PR/labels/$e" >/dev/null 2>&1 || true; fi
+            if [ "$e" != "$classe" ] && printf '%s' ",$actuelles," | grep -q ",$e,"; then
+              gh api -X DELETE "repos/$GITHUB_REPOSITORY/issues/$PR/labels/$e" >/dev/null
+            fi
           done
-          gh api -X POST "repos/$GITHUB_REPOSITORY/issues/$PR/labels" -f "labels[]=$classe" >/dev/null
+          if printf '%s' ",$actuelles," | grep -q ",$classe,"; then
+            echo "Déjà posée."
+          else
+            gh api -X POST "repos/$GITHUB_REPOSITORY/issues/$PR/labels" -f "labels[]=$classe" >/dev/null
+          fi
