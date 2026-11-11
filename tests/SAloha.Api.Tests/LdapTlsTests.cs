@@ -19,16 +19,23 @@ public class LdapTlsTests : IDisposable
         caReq.CertificateExtensions.Add(new X509BasicConstraintsExtension(true, false, 0, true));
         caReq.CertificateExtensions.Add(new X509KeyUsageExtension(X509KeyUsageFlags.KeyCertSign | X509KeyUsageFlags.CrlSign, true));
         var ca = caReq.CreateSelfSigned(DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(30));
+        return (ca, Leaf(ca, host, ServerAuth));
+    }
 
+    private const string ServerAuth = "1.3.6.1.5.5.7.3.1";
+    private const string ClientAuth = "1.3.6.1.5.5.7.3.2";
+
+    /// <summary>Certificat du serveur <paramref name="host"/> émis par <paramref name="ca"/> pour l'usage donné.</summary>
+    private static X509Certificate2 Leaf(X509Certificate2 ca, string host, string usage)
+    {
         using var leafKey = RSA.Create(2048);
         var leafReq = new CertificateRequest($"CN={host}", leafKey, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
         var san = new SubjectAlternativeNameBuilder();
         san.AddDnsName(host);
         leafReq.CertificateExtensions.Add(san.Build());
         leafReq.CertificateExtensions.Add(new X509BasicConstraintsExtension(false, false, 0, false));
-        leafReq.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension([new Oid("1.3.6.1.5.5.7.3.1")], false));
-        var leaf = leafReq.Create(ca, DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(10), RandomNumberGenerator.GetBytes(8));
-        return (ca, leaf);
+        leafReq.CertificateExtensions.Add(new X509EnhancedKeyUsageExtension([new Oid(usage)], false));
+        return leafReq.Create(ca, DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddDays(10), RandomNumberGenerator.GetBytes(8));
     }
 
     private string WritePem(string name, params X509Certificate2[] certs)
@@ -60,6 +67,18 @@ public class LdapTlsTests : IDisposable
         var (_, intrus) = Chain("Autre CA", "dc01.mondomaine.local");
         var validator = LdapTls.Validator(WritePem("ca.pem", ca))!;
         Assert.False(validator(this, intrus, null, SslPolicyErrors.RemoteCertificateChainErrors));
+    }
+
+    [Fact]
+    public void Un_certificat_de_l_autorite_sans_usage_serveur_est_refuse()
+    {
+        // La validation du système exige l'usage « authentification serveur » ; l'autorité
+        // configurée ne rattrape pas un certificat qu'elle a émis pour un autre usage.
+        var (ca, serveur) = Chain("CA de l'annuaire", "dc01.mondomaine.local");
+        using var client = Leaf(ca, "dc01.mondomaine.local", ClientAuth);
+        var validator = LdapTls.Validator(WritePem("ca.pem", ca))!;
+        Assert.True(validator(this, serveur, null, SslPolicyErrors.RemoteCertificateChainErrors));
+        Assert.False(validator(this, client, null, SslPolicyErrors.RemoteCertificateChainErrors));
     }
 
     [Fact]
