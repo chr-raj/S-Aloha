@@ -125,6 +125,36 @@ public class NotificationsTests(ApiFixture api)
     }
 
     [Fact]
+    public async Task SOC_23_DRG_13_les_notifications_d_une_declaration_suivent_l_incident_deplace()
+    {
+        var admin = api.Client();
+        var siege = Id(await Json(await admin.PostAsJsonAsync("/api/admin/perimeters", new { name = "Siège N23D" })));
+        var usine = Id(await Json(await admin.PostAsJsonAsync("/api/admin/perimeters", new { name = "Usine N23D" })));
+        async Task Assign(int p, string id, string role) => await Json(await admin.PostAsJsonAsync($"/api/admin/perimeters/{p}/assignments",
+            new { principalType = "User", principalId = id, principalDisplayName = id, role }));
+        await Assign(siege, "chef.siege.n23d", "Manager");
+        await Assign(usine, "chef.usine.n23d", "Manager");
+        var chefSiege = api.Client("User", "chef.siege.n23d");
+        var chefUsine = api.Client("User", "chef.usine.n23d");
+        object Incident(int p) => new
+        {
+            title = "Titre confidentiel N23D", impact = "Élevé", urgency = "Élevée", isSecurity = true, perimeterId = p,
+            ownerType = "User", ownerId = "chef.siege.n23d", ownerDisplayName = "Chef"
+        };
+        var inc = Id(await Json(await admin.PostAsJsonAsync("/api/incidents", Incident(siege))));
+        await Json(await admin.PostAsJsonAsync($"/api/incidents/{inc}/qualification",
+            new { nis2Important = true, personalDataBreach = false, personalDataBreachReason = "Aucune donnée" }));
+        var declaration = Ref((await Json(await admin.GetAsync($"/api/regulatory-notifications?incident={inc}"))).EnumerateArray().Single());
+        Assert.Contains("Déclaration réglementaire créée", await Events(chefSiege, declaration));   // témoin
+        Assert.Empty(await Events(chefUsine, declaration));
+
+        // PER-07 : l'incident déplacé emmène sa déclaration (DRG-01), et les notifications de celle-ci.
+        await Json(await admin.PutAsJsonAsync($"/api/incidents/{inc}", Incident(usine)));
+        Assert.Empty(await Events(chefSiege, declaration));
+        Assert.Contains("Déclaration réglementaire créée", await Events(chefUsine, declaration));
+    }
+
+    [Fact]
     public async Task PRB_31_action_affectee_au_R_et_au_A()
     {
         var m = api.Client("Manager", "chef.prb31");

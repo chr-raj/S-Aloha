@@ -192,8 +192,15 @@ public class IncidentsController(AppDbContext db) : RecordController<Incident, I
         // PER-07, DRG-01 : la lecture des déclarations filtre sur le périmètre copié dans chacune ;
         // il suit l'incident déplacé, dans le même enregistrement.
         if (!creating && entry.Property(x => x.PerimeterId).IsModified)
-            foreach (var declaration in await Db.RegulatoryNotifications.Where(d => d.IncidentId == e.Id).ToListAsync())
-                declaration.PerimeterId = e.PerimeterId;
+        {
+            var declarations = await Db.RegulatoryNotifications.Where(d => d.IncidentId == e.Id).ToListAsync();
+            foreach (var declaration in declarations) declaration.PerimeterId = e.PerimeterId;
+            // SOC-23 : leurs notifications (création, relances DRG-13) portent aussi une copie du
+            // périmètre, lue par la cloche et les courriels ; elles suivent comme celles de l'incident.
+            var ids = declarations.Select(d => d.Id).ToList();
+            foreach (var n in await Db.Notifications.Where(n => n.TargetType == "notification" && ids.Contains(n.TargetId)).ToListAsync())
+                n.PerimeterId = e.PerimeterId;
+        }
         if (creating || resumed || entry.Property(x => x.Priority).IsModified || entry.Property(x => x.AffectedService).IsModified
             || entry.Property(x => x.ServiceId).IsModified || e.ResolutionDueAt is null)
         {
