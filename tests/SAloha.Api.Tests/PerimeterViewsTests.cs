@@ -148,18 +148,25 @@ public class PerimeterViewsTests(ApiFixture api)
 
         async Task<List<string>> Refs(HttpClient c, int limit) => (await Json(await c.GetAsync($"/api/search?q=kq77&limit={limit}")))
             .EnumerateArray().Select(h => h.GetProperty("reference").GetString()!).ToList();
-        // L'indexation est asynchrone : on attend que l'Admin les trouve tous.
-        for (var i = 0; i < 50 && (await Refs(admin, 50)).Count < 5; i++) await Task.Delay(200);
-        Assert.Equal(5, (await Refs(admin, 50)).Count);
-        Assert.DoesNotContain(Ref(usineHit), (await Refs(admin, 3)));   // témoin : hors des trois premiers
+        // L'indexation est asynchrone, et une reconstruction de l'index demandée par un autre test
+        // peut le vider puis le remplir pendant celui-ci : chaque lecture attend son résultat.
+        async Task<List<string>> Until(HttpClient c, int limit, Func<List<string>, bool> ok)
+        {
+            var refs = await Refs(c, limit);
+            for (var i = 0; i < 50 && !ok(refs); i++) { await Task.Delay(200); refs = await Refs(c, limit); }
+            return refs;
+        }
+        Assert.Equal(5, (await Until(admin, 50, r => r.Count == 5)).Count);
+        Assert.DoesNotContain(Ref(usineHit), await Until(admin, 3, r => r.Count == 3));   // témoin : hors des trois premiers
 
         // Un seul résultat demandé : celui de l'Usine, plus loin que trois fois la limite.
-        Assert.Equal([Ref(usineHit)], await Refs(fara, 1));
+        Assert.Equal([Ref(usineHit)], await Until(fara, 1, r => r.Count == 1));
 
         // PER-07 : un enregistrement déplacé se trouve depuis le nouveau périmètre dès le déplacement.
         var moved = siegeHits[0];
         await Json(await admin.PutAsJsonAsync($"/api/incidents/{Id(moved)}", Incident(moved.GetProperty("title").GetString()!, usine, status: "Résolu")));
-        Assert.Contains(Ref(moved), await Refs(fara, 10));
-        Assert.Equal(2, (await Refs(fara, 10)).Count);
+        var after = await Until(fara, 10, r => r.Count == 2);
+        Assert.Contains(Ref(moved), after);
+        Assert.Equal(2, after.Count);
     }
 }
