@@ -53,8 +53,37 @@ public class ServiceRequestsController(AppDbContext db) : RecordController<Servi
         if (e.Id == 0 && item is { Active: false }) return $"Le modèle « {item.Name} » n'est plus proposé.";
         _preApproved = e.Id == 0 && item is { RequiresApproval: false };
         FromItem(e, item);
-        return await ServiceCatalog.ResolveAsync(Db, e);
+        var error = await ServiceCatalog.ResolveAsync(Db, e);
+        return error ?? (e.Id == 0 ? null : CheckReworded(e));
     }
+
+    /// <summary>
+    /// Décision du 2026-11-09 (#257) : le bénéficiaire ne change que par le demandeur ou un
+    /// gestionnaire (REQ-10, REQ-32 lui donnent des droits) ; objet, service et bénéficiaire ne
+    /// changent plus sur une demande Satisfaite ou Close ; sur une demande Approuvée ou En cours,
+    /// les changer la ramène à Soumise, ce qui efface l'approbation (REQ-04). Comparé aux valeurs
+    /// enregistrées, après la reprise du modèle et la résolution du service.
+    /// </summary>
+    private string? CheckReworded(ServiceRequest e)
+    {
+        var entry = Db.Entry(e);
+        var beneficiary = !string.Equals(entry.Property(x => x.RequestedFor).OriginalValue, e.RequestedFor, StringComparison.OrdinalIgnoreCase);
+        if (beneficiary && !IsManager && !string.Equals(e.CreatedBy, Me, StringComparison.OrdinalIgnoreCase))
+            return "Seul le demandeur ou un gestionnaire change le bénéficiaire de la demande.";
+        var reworded = beneficiary
+            || entry.Property(x => x.RequestedItem).OriginalValue != e.RequestedItem
+            || entry.Property(x => x.ServiceId).OriginalValue != e.ServiceId
+            || !string.Equals(entry.Property(x => x.AffectedService).OriginalValue, e.AffectedService, StringComparison.OrdinalIgnoreCase);
+        if (reworded && e.Status is "Satisfaite" or "Close")
+            return $"Demande {e.Status.ToLowerInvariant()} : l'objet demandé, le service et le bénéficiaire ne se modifient plus ; soumettre une nouvelle demande.";
+        _reworded = reworded && e.Status is "Approuvée" or "En cours";
+        return null;
+    }
+
+    private bool _reworded;
+
+    // REQ-04 : objet, service ou bénéficiaire changés après l'approbation → Soumise (approbation effacée).
+    protected override string? StatusAfterValidation(ServiceRequest e) => _reworded ? "Soumise" : null;
 
     private bool _preApproved;
     private bool _dueChangedByUser;
@@ -183,6 +212,8 @@ public class ServiceRequestsController(AppDbContext db) : RecordController<Servi
         // REQ-21 : une demande pré-approuvée n'attend aucun approbateur.
         if (from == "") { if (e.Status == "Soumise") n.ToManagers(e, LinkType, "Demande à approuver"); return; }
         if (from is null) return;
+        // REQ-04 : renvoyée à Soumise par une modification après l'approbation → approbateurs.
+        if (e.Status == "Soumise") { n.ToManagers(e, LinkType, "Demande à approuver"); return; }
         // REQ-10 : une contestation → responsable.
         if (from == "Satisfaite" && e.Status == "En cours") { n.ToOwner(e, LinkType, "Demande contestée"); return; }
         var ev = e.Status switch { "Approuvée" => "Demande approuvée", "Rejetée" => "Demande rejetée", "Satisfaite" => "Demande satisfaite", _ => null };

@@ -154,6 +154,13 @@ public abstract class RecordController<T, TDto, TView>(AppDbContext db) : Contro
     /// comme <see cref="StatusAfterEdit"/>, avant la recopie du DTO.
     /// </summary>
     protected virtual Task<string?> StatusAfterManagerEditAsync(T e, TDto dto) => Task.FromResult<string?>(null);
+    /// <summary>
+    /// Statut auquel la modification ramène l'enregistrement, décidé après la recopie du DTO et
+    /// <see cref="ValidateAsync"/>, sur les valeurs normalisées (service résolu, valeurs reprises
+    /// d'un modèle), pour tout rôle ; null : rien. Ne s'applique que si les deux précédents n'ont
+    /// rien décidé.
+    /// </summary>
+    protected virtual string? StatusAfterValidation(T e) => null;
     /// <summary>Effets d'un changement de statut (horodatages) ; <c>from</c> vide à la création.</summary>
     protected virtual void OnStatusChanged(T e, string from) { }
     /// <summary>
@@ -306,6 +313,7 @@ public abstract class RecordController<T, TDto, TView>(AppDbContext db) : Contro
         string? left = null;
         var error = Fill(e, dto, false) ?? await ValidateAsync(e);
         if (error is not null) return BadRequest(new { message = error });
+        demoted ??= StatusAfterValidation(e);
         error = await ConflictAsync(e);
         if (error is not null) return Conflict(new { message = error });
 

@@ -35,6 +35,8 @@ une modification non standard du SI (→ [changement](habilitation-des-changemen
 | Annuler sa propre demande avant traitement | Demandeur | ✔ | ✔ | ✅ REQ-09 |
 | Tenir le catalogue de demandes | ✘ | ✔ | ✔ | ✅ REQ-20, PER-13 |
 | Modifier l'échéance d'une demande issue d'un modèle à délai cible | ✘ | ✔ | ✔ | ✅ REQ-22 |
+| Changer le bénéficiaire | Demandeur | ✔ | ✔ | ✅ REQ-07 |
+| Changer l'objet demandé, le service ou le bénéficiaire d'une demande Satisfaite ou Close | ✘ | ✘ | ✘ | ✅ REQ-04 |
 | Supprimer | ✘ | ✘ | ✔ | ✅ |
 
 ## 3. Données
@@ -82,6 +84,8 @@ stateDiagram-v2
     Soumise --> Annulee : demandeur
     Approuvee --> EnCours : prise en charge
     Approuvee --> Annulee : demandeur
+    Approuvee --> Soumise : objet, service ou bénéficiaire modifié
+    EnCours --> Soumise : objet, service ou bénéficiaire modifié
     EnCours --> Satisfaite : tâches terminées
     Satisfaite --> EnCours : non conforme
     Satisfaite --> Close : confirmation ou 5 jours ouvrés
@@ -100,6 +104,7 @@ approbation ; seules les transitions ci-dessous sont permises (SOC-05).
 | — → Soumise | Tous | Titre, objet demandé | Référence | ✅ |
 | — → Approuvée | Auto | Modèle sans approbation | `ApprovedBy` = « Modèle pré-approuvé » | ✅ REQ-21 |
 | Soumise → Approuvée | Manager | | `ApprovedAt`, `ApprovedBy` | ✅ |
+| Approuvée, En cours → Soumise | Auto | Objet demandé, service ou bénéficiaire modifié (par tout rôle) | Approbation effacée ; approbateurs notifiés | ✅ REQ-04 |
 | Soumise → Rejetée | Manager | Motif de rejet | | ✅ (motif) |
 | Soumise, Approuvée → Annulée | Demandeur, Manager | Pas encore En cours | `CancelledAt` | ✅ REQ-09 |
 | Approuvée → En cours | Tous | Responsable renseigné | | ✅ REQ-03 (approbation exigée), REQ-13 (responsable) |
@@ -115,10 +120,10 @@ approbation ; seules les transitions ci-dessous sont permises (SOC-05).
 | REQ-01 | Demande créée au statut **Soumise**, référence `REQ-AAAA-NNNN` ; l'objet demandé est obligatoire | ✅ | |
 | REQ-02 | **Approuvée** et **Rejetée** : gestionnaire uniquement ; l'approbation horodate `ApprovedAt` / `ApprovedBy` | ✅ | |
 | REQ-03 | **En cours**, **Satisfaite** et **Close** exigent une demande approuvée : une demande **rejetée est terminée** | ✅ | |
-| REQ-04 | Revenir à Soumise ou passer à Rejetée **efface l'approbation** | ✅ | |
+| REQ-04 | Revenir à Soumise ou passer à Rejetée **efface l'approbation** ; modifier l'objet demandé, le service ou le bénéficiaire d'une demande Approuvée ou En cours la **ramène à Soumise** (à approuver de nouveau) ; sur une demande Satisfaite ou Close, ils ne se modifient plus (400) | ✅ (décision du 2026-11-09 ; le titre et la description restent libres ; une demande d'un modèle sans approbation repasse aussi par un gestionnaire) | |
 | REQ-05 | `FulfilledAt` posé à Satisfaite, `ClosedAt` à Close, effacés à la sortie (SOC-08) | ✅ | |
 | REQ-06 | Un **rejet** exige un motif, communiqué au demandeur | ✅ | 1 |
-| REQ-07 | Le **bénéficiaire** vaut le demandeur par défaut ; une demande pour autrui garde les deux | ✅ | 2 |
+| REQ-07 | Le **bénéficiaire** vaut le demandeur par défaut ; une demande pour autrui garde les deux ; seuls le demandeur et un gestionnaire changent le bénéficiaire (400 sinon : il reçoit les droits de REQ-10 et REQ-32) | ✅ | 2 |
 | REQ-08 | **Transitions contraintes** selon le § 4 (SOC-05) ; Rejetée, Annulée et Close sont finales | ✅ | 1 |
 | REQ-09 | Statut **Annulée** : le demandeur (ou un Manager) annule une demande Soumise ou Approuvée, tant qu'elle n'est pas En cours | ✅ | 1 |
 | REQ-10 | **Contestation** : dans les 5 jours ouvrés, le demandeur ou le bénéficiaire renvoie une demande Satisfaite En cours, avec motif | ✅ | 2 |
