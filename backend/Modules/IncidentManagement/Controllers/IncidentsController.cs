@@ -207,7 +207,9 @@ public class IncidentsController(AppDbContext db) : RecordController<Incident, I
     /// code ; l'attente d'un enfant prend fin (son temps compte comme à une reprise, INC-22).
     /// Le journal d'audit trace chaque enfant ; déclarant et utilisateur affecté sont notifiés.
     /// Un enfant majeur sans problème relié reste ouvert (INC-15 sans exception, décision du
-    /// 2026-10-26) ; la réponse le liste avec la raison.
+    /// 2026-10-26) ; la réponse le liste avec la raison. De même, un parent résolu en *Doublon*
+    /// laisse ses enfants ouverts : un doublon est relié à l'incident conservé (INC-08), ce que
+    /// la cascade ne sait pas faire (décision du 2026-11-09, #245).
     /// Seuls les enfants du périmètre du parent suivent : le rattachement exige le même
     /// périmètre, mais un changement de périmètre (PER-07) conserve le lien (PER-05, PER-06).
     /// </summary>
@@ -217,6 +219,11 @@ public class IncidentsController(AppDbContext db) : RecordController<Incident, I
         foreach (var child in await Db.Incidents.Where(c => c.ParentId == parent.Id && c.PerimeterId == parent.PerimeterId
                      && !Incident.Done.Contains(c.Status)).ToListAsync())
         {
+            if (parent.ResolutionCode == "Doublon")
+            {
+                _unresolvedChildren.Add(new(child.Reference, "Parent résolu en doublon (INC-08) : relier l'enfant à l'incident conservé, puis le résoudre, ou le détacher."));
+                continue;
+            }
             if (child.IsMajor && !await ItemLinks.IsLinkedToAsync(Db, "incident", child.Id, "problem"))
             {
                 _unresolvedChildren.Add(new(child.Reference, "Incident majeur sans problème relié (INC-15) : le relier à un problème, puis le résoudre."));

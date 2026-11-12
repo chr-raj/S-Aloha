@@ -97,6 +97,31 @@ public class IncidentLot3Tests(ApiFixture api)
     }
 
     [Fact]
+    public async Task INC_08_INC_16_la_cascade_ne_recopie_pas_le_code_doublon()
+    {
+        // Décision du 2026-11-09 (#245, option B) : la cascade ne fait pas ce que l'API refuserait en direct.
+        var agent = api.Client("User", "tech.inc16");
+        var kept = await Json(await agent.PostAsJsonAsync("/api/incidents", Incident("Imprimante du 2e étage hors service")));
+        var parent = await Json(await agent.PostAsJsonAsync("/api/incidents", Incident("Impression impossible au 2e étage")));
+        var child = await Json(await agent.PostAsJsonAsync("/api/incidents", Incident("Facture non imprimée (2e étage)")));
+        await Json(await agent.PutAsJsonAsync($"/api/incidents/{Id(child)}/parent", new { parentReference = Str(parent, "reference") }));
+        // Témoin : l'enfant ne se résout pas en Doublon sans lien vers l'incident conservé.
+        Assert.Equal(HttpStatusCode.BadRequest, (await agent.PutAsJsonAsync($"/api/incidents/{Id(child)}",
+            Incident("Facture non imprimée (2e étage)", "Résolu", resolution: "Même panne", code: "Doublon"))).StatusCode);
+        await Json(await agent.PostAsJsonAsync("/api/links", new { fromType = "incident", fromId = Id(parent), toReference = Str(kept, "reference") }));
+
+        var resolved = await Json(await agent.PutAsJsonAsync($"/api/incidents/{Id(parent)}",
+            Incident("Impression impossible au 2e étage", "Résolu", resolution: "Même panne", code: "Doublon")));
+        Assert.Equal("Résolu", Str(resolved, "status"));
+        var left = Assert.Single(resolved.GetProperty("unresolvedChildren").EnumerateArray());
+        Assert.Equal(Str(child, "reference"), Str(left, "reference"));
+        Assert.Contains("doublon", Str(left, "reason"));
+        var c = await Json(await agent.GetAsync($"/api/incidents/{Id(child)}"));
+        Assert.Equal("Nouveau", Str(c, "status"));
+        Assert.Equal(JsonValueKind.Null, c.GetProperty("resolutionCode").ValueKind);
+    }
+
+    [Fact]
     public async Task INC_26_en_attente_depuis_plus_de_5_jours_ouvres_remonte_au_responsable()
     {
         var owner = api.Client("User", "tech.inc26");
