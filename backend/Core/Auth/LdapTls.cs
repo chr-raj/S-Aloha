@@ -1,4 +1,5 @@
 using System.Net.Security;
+using System.Security.Cryptography;
 using Novell.Directory.Ldap;
 using System.Security.Cryptography.X509Certificates;
 
@@ -8,12 +9,16 @@ namespace SAloha.Api.Core.Auth;
 /// Confiance en l'autorité de certification d'un annuaire interne pour LDAPS (S2).
 /// Une AD d'entreprise présente un certificat émis par sa propre autorité, absente du magasin
 /// du conteneur : sans ce réglage, LDAPS échoue. <c>Ldap:CaCertificatePath</c> désigne un fichier
-/// PEM (une ou plusieurs autorités) ; la chaîne du serveur doit alors y aboutir.
+/// PEM (une ou plusieurs autorités) ; la chaîne du serveur doit alors y aboutir, et le certificat
+/// porter l'usage « authentification serveur », comme l'exige la validation du système.
 /// La validation n'est <b>jamais</b> désactivée : une erreur autre qu'une chaîne inconnue
 /// (nom du serveur différent de <c>Ldap:Host</c>, certificat absent) reste un refus.
 /// </summary>
 public static class LdapTls
 {
+    /// <summary>Usage étendu « authentification serveur » (RFC 5280, id-kp-serverAuth).</summary>
+    private const string ServerAuthentication = "1.3.6.1.5.5.7.3.1";
+
     /// <summary>
     /// Validateur à brancher sur la connexion, ou <c>null</c> (validation par défaut du système)
     /// quand aucune autorité n'est configurée.
@@ -66,6 +71,9 @@ public static class LdapTls
         chain.ChainPolicy.CustomTrustStore.AddRange(authorities);
         // Pas de contrôle de révocation en ligne : un annuaire interne n'a souvent ni CRL ni OCSP joignable.
         chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
+        // Même exigence que la validation du système : un certificat émis par l'autorité pour un
+        // autre usage (authentification client seule) ne vaut pas certificat de serveur.
+        chain.ChainPolicy.ApplicationPolicy.Add(new Oid(ServerAuthentication));
         return chain.Build(leaf);
     }
 }
