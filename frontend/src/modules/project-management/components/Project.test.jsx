@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { tabsFor } from '../pages/ProjectDetail'
 import { Board } from './Agile'
 import BurndownChart from './BurndownChart'
+import { Phases } from './Registers'
 
 const update = vi.fn(() => Promise.resolve({}))
 vi.mock('../../../api', () => ({
@@ -49,6 +50,19 @@ describe('Tableau', () => {
   it('projet clos : les cartes ne bougent plus', async () => {
     render(<Board project={{ id: 3, status: 'Clôturé', components: 'backlog,board' }} />)
     expect((await screen.findByLabelText('Statut de Connexion SSO')).disabled).toBe(true)
+  })
+})
+
+describe('Étapes de gestion (PRJ-21)', () => {
+  const project = (status) => ({ id: 3, status, components: 'stages', ownerType: 'User', ownerId: 'tiana.ravelo' })
+  it('le chef de projet valide la fin de l\'étape courante', async () => {
+    render(<Phases project={project('En cours')} stages />)
+    expect(await screen.findAllByText('Valider la fin d\'étape')).toHaveLength(1)
+  })
+  it.each(['Clôturé', 'Abandonné'])('projet %s : la fin d\'étape ne se valide plus (PRJ-07)', async (status) => {
+    render(<Phases project={project(status)} stages />)
+    await screen.findByText('Étapes de gestion (2)')
+    expect(screen.queryByText('Valider la fin d\'étape')).toBeNull()
   })
 })
 

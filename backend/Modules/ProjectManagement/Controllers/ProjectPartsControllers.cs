@@ -43,9 +43,9 @@ public class PhasesController(AppDbContext db) : ProjectPartController<ProjectPh
     [HttpPost("{id:int}/approve")]
     public async Task<IActionResult> Approve(int projectId, int id)
     {
-        var p = await ProjectAsync(projectId);
-        if (p is null) return NotFound();
-        if (!IsLead(p)) return Forbid();
+        // Une écriture comme les autres : projet figé (PRJ-07), composant (PRJ-03), chef de projet.
+        var (_, error) = await Load(projectId, true);
+        if (error is not null) return error;
         var e = await Db.ProjectPhases.FirstOrDefaultAsync(x => x.Id == id && x.ProjectId == projectId);
         if (e is null) return NotFound();
         if (e.Status == "Terminée") return BadRequest(new { message = "Cette étape est déjà terminée." });

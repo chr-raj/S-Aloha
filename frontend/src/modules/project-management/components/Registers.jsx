@@ -10,8 +10,10 @@ const PHASE_TONE = { 'À venir': 'new', 'En cours': 'progress', 'Terminée': 'do
 /** Phases (cycle en V) ou étapes de gestion (PRINCE2) — PRJ-10, PRJ-20, PRJ-21. */
 export function Phases({ project, stages, onChanged }) {
   const lead = useIsLead(project)
-  // PRJ-21 : seule l'étape courante (la première non terminée) se valide.
-  const approve = (row, reload, rows) => stages && lead && row.id === rows.find(x => x.status !== 'Terminée')?.id && (
+  // PRJ-21 : seule l'étape courante (la première non terminée) se valide ; PRJ-07 : plus rien
+  // ne se valide sur un projet clôturé ou abandonné.
+  const frozen = ['Clôturé', 'Abandonné'].includes(project.status)
+  const approve = (row, reload, rows) => stages && lead && !frozen && row.id === rows.find(x => x.status !== 'Terminée')?.id && (
     <button className="btn small" onClick={() => api.projects.approveStage(project.id, row.id).then(() => { reload(); onChanged?.() })}
       title="Validation de fin d'étape : l'étape se termine et la suivante démarre">Valider la fin d'étape</button>)
   return (

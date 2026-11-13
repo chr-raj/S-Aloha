@@ -144,7 +144,7 @@ stateDiagram-v2
 | PRJ-04 | Le projet, sa méthode, ses phases ou étapes, jalons et sprints se modifient par le **chef de projet** ou un **gestionnaire** (403 sinon) ; même règle pour supprimer un objet du projet ; supprimer un projet : Admin | ✅ | |
 | PRJ-05 | **Transitions contraintes** selon le § 4 (SOC-05) ; Clôturé et Abandonné sont finaux | ✅ | |
 | PRJ-06 | Pas de lancement (En cours) sans **business case justifié** quand le composant est actif | ✅ | |
-| PRJ-07 | Projet Clôturé ou Abandonné : ses objets **ne se modifient plus** (400) | ✅ | |
+| PRJ-07 | Projet Clôturé ou Abandonné : ses objets **ne se modifient plus** (400), validation de fin d'étape comprise (PRJ-21) | ✅ | |
 | PRJ-08 | **Validation** : Cadrage → En cours par un gestionnaire seulement (403 pour le chef de projet, même sur son projet) ; exige chef de projet, début et fin cible ; pose `ValidatedAt`, `ValidatedBy`. Suspendu → En cours ne redemande pas de validation | ✅ | |
 | PRJ-09 | **Abandon** motivé (`AbandonReason`) | ✅ | |
 | PRJ-10 | Projet en **Cycle en V** : 8 phases proposées à la création, modifiables (Spécifications, Conception générale, Conception détaillée, Développement, Tests unitaires, Tests d'intégration, Recette, Mise en production) | ✅ | |
@@ -200,7 +200,7 @@ PRJ-22, PRJ-30 à PRJ-33.
 | `DELETE /api/projects/{id}` | Admin | Suppression |
 | `GET /api/projects/{id}/summary` | User | Synthèse (PRJ-30 à PRJ-33) et prévision de fin (`forecast` : date, méthode, base, tolérance — PRJ-22) |
 | `…/{id}/phases`, `…/milestones`, `…/sprints` (GET, POST, PUT, DELETE) | Lecture : User ; écriture : chef de projet, Manager | Phases ou étapes, jalons, sprints |
-| `POST …/{id}/phases/{phaseId}/approve` | Chef de projet, Manager | Validation de fin d'étape (PRJ-21) |
+| `POST …/{id}/phases/{phaseId}/approve` | Chef de projet, Manager | Validation de fin d'étape (PRJ-21) ; 400 sur un projet Clôturé ou Abandonné (PRJ-07) |
 | `GET …/{id}/sprints/{sprintId}/burndown` | User | Burndown : total, puis par jour la ligne idéale et les points restants (PRJ-13) |
 | `…/{id}/deliverables` | User ; Validé : chef de projet, Manager | Livrables (PRJ-11) |
 | `…/{id}/workitems`, `…/risks`, `…/issues` | User | Éléments de travail, risques, incidents projet |

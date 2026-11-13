@@ -47,7 +47,12 @@ public abstract class ProjectPartController<T, TDto, TView>(AppDbContext db) : C
         return p is not null && (await ScopeAsync()).Sees(p.PerimeterId) ? p : null;
     }
 
-    private async Task<(Project? Project, IActionResult? Error)> Load(int projectId, bool writing)
+    /// <summary>
+    /// Garde commune de toute route du registre : projet visible, composant activé (PRJ-03) et,
+    /// en écriture, projet non figé (PRJ-07) puis droit du chef de projet. Une route d'action
+    /// propre à un registre (validation de fin d'étape…) passe par elle aussi.
+    /// </summary>
+    protected async Task<(Project? Project, IActionResult? Error)> Load(int projectId, bool writing)
     {
         var p = await ProjectAsync(projectId);
         if (p is null) return (null, NotFound());

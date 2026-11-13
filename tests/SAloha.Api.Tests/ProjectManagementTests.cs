@@ -211,6 +211,46 @@ public class ProjectManagementTests(ApiFixture api)
         Assert.Contains("ne se modifie plus", await frozen.Content.ReadAsStringAsync());
     }
 
+    [Theory]
+    [InlineData("Clôturé")]
+    [InlineData("Abandonné")]
+    public async Task PRJ_07_la_fin_d_etape_ne_se_valide_plus_sur_un_projet_fige(string final)
+    {
+        var lead = api.Client("User", "hasina.fige");
+        var manager = api.Client("Manager", "lova.rabe");
+        var start = DateTime.UtcNow.Date;
+        object Dto(string? status) => Project($"Projet figé ({final})", "PRINCE2", status: status, justification: "Fin de support",
+            ownerId: "hasina.fige", start: start, end: start.AddMonths(6), abandonReason: status == "Abandonné" ? "Besoin disparu" : null);
+        var id = (await Json(await lead.PostAsJsonAsync("/api/projects", Dto(null)))).GetProperty("id").GetInt32();
+        await Json(await manager.PutAsJsonAsync($"/api/projects/{id}", Dto("En cours")));
+        async Task<List<(int Id, string Status, bool Approved)>> Stages() =>
+            (await Json(await lead.GetAsync($"/api/projects/{id}/phases"))).EnumerateArray()
+                .Select(s => (s.GetProperty("id").GetInt32(), s.GetProperty("status").GetString()!, s.GetProperty("approvedAt").ValueKind != JsonValueKind.Null)).ToList();
+        var before = await Stages();
+        Assert.True(before.Count >= 2);
+        await Json(await lead.PutAsJsonAsync($"/api/projects/{id}", Dto(final)));
+
+        // Le chef de projet comme un gestionnaire : 400, et les étapes ne bougent pas.
+        foreach (var client in new[] { lead, manager })
+        {
+            var refused = await client.PostAsync($"/api/projects/{id}/phases/{before[0].Id}/approve", null);
+            Assert.Equal(HttpStatusCode.BadRequest, refused.StatusCode);
+            Assert.Contains("ne se modifie plus", await refused.Content.ReadAsStringAsync());
+        }
+        Assert.Equal(before, await Stages());
+    }
+
+    [Fact]
+    public async Task PRJ_03_la_fin_d_etape_ne_se_valide_pas_sans_le_composant()
+    {
+        // La route d'action répond comme les autres écritures du registre quand le projet n'a ni phases ni étapes.
+        var m = api.Client("Manager", "lova.rabe");
+        var kanban = (await Json(await m.PostAsJsonAsync("/api/projects", Project("Sans étapes", "Kanban")))).GetProperty("id").GetInt32();
+        var refused = await m.PostAsync($"/api/projects/{kanban}/phases/1/approve", null);
+        Assert.Equal(HttpStatusCode.BadRequest, refused.StatusCode);
+        Assert.Contains("Composant non activé", await refused.Content.ReadAsStringAsync());
+    }
+
     [Fact]
     public async Task Un_abandon_se_motive()
     {
