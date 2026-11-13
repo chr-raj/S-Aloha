@@ -29,16 +29,23 @@ public partial class HybridSearch(AppDbContext db, IEmbeddingClient embeddings, 
     private float MinSimilarity => float.TryParse(config["Search:MinSimilarity"], System.Globalization.CultureInfo.InvariantCulture, out var v) ? v : 0.47f;
 
     /// <param name="query">Requête du vectoriel, et du lexical si <paramref name="lexicalQuery"/> est absent.</param>
+    /// <param name="perimeters">
+    /// RAG-13, PER-09 : périmètres visibles de l'utilisateur, ou <c>null</c> pour tous (Admin). Le
+    /// filtre est dans les requêtes, sur l'enregistrement vivant (son périmètre actuel, PER-07) :
+    /// filtrer après le classement laissait la liste courte, voire vide, quand les mieux classés
+    /// étaient d'autres périmètres. Un article publié est visible de tous.
+    /// </param>
     /// <param name="lexicalQuery">
     /// Requête lexicale distincte : pour les cas similaires, le titre seul. Les
     /// termes étant reliés par OU, une description entière ramène des passages
     /// qui ne partagent que des mots secondaires (« mettre », « minutes »).
     /// </param>
-    public async Task<List<Hit>> SearchAsync(string query, IReadOnlyCollection<string> types, (string Type, int Id)? exclude, int limit,
-        string? lexicalQuery = null)
+    public async Task<List<Hit>> SearchAsync(string query, IReadOnlyCollection<string> types, IReadOnlyCollection<int>? perimeters,
+        (string Type, int Id)? exclude, int limit, string? lexicalQuery = null)
     {
-        var lexical = await LexicalAsync(lexicalQuery ?? query, types);
-        var semantic = await SemanticAsync(query, types);
+        var visible = perimeters?.ToArray();
+        var lexical = await LexicalAsync(lexicalQuery ?? query, types, visible);
+        var semantic = await SemanticAsync(query, types, visible);
 
         // Rang d'un enregistrement dans chaque liste = rang de son meilleur passage.
         var fused = new Dictionary<(string, int), (double Score, int Passage, bool Lex, bool Sem)>();
@@ -76,13 +83,20 @@ public partial class HybridSearch(AppDbContext db, IEmbeddingClient embeddings, 
     /// d'une description) ne doit pas exiger que tous ses mots soient présents ;
     /// le classement ts_rank_cd favorise les passages qui en contiennent le plus.
     /// </summary>
-    private async Task<List<(string Type, int Id, int Passage)>> LexicalAsync(string query, IReadOnlyCollection<string> types)
+    private async Task<List<(string Type, int Id, int Passage)>> LexicalAsync(string query, IReadOnlyCollection<string> types, int[]? perimeters)
     {
         var terms = Words().Matches(query.ToLowerInvariant()).Select(m => m.Value).Where(w => w.Length >= 2).Distinct().Take(40).ToList();
         if (terms.Count == 0) return [];
         var tsquery = string.Join(" | ", terms);
-        return (await db.SearchPassages.AsNoTracking()
-            .Where(p => types.Contains(p.SourceType) && p.SearchVector.Matches(EF.Functions.ToTsQuery("french", tsquery)))
+        var passages = db.SearchPassages.AsNoTracking()
+            .Where(p => types.Contains(p.SourceType) && p.SearchVector.Matches(EF.Functions.ToTsQuery("french", tsquery)));
+        // Même règle que la requête vectorielle ; « Publié » : article partagé (ItemLinks, PER-09).
+        if (perimeters is not null)
+            passages = passages.Where(p =>
+                (p.SourceType == "article" && db.KnowledgeArticles.Any(a => a.Id == p.SourceId && (a.Status == "Publié" || perimeters.Contains(a.PerimeterId))))
+                || (p.SourceType == "problem" && db.Problems.Any(x => x.Id == p.SourceId && perimeters.Contains(x.PerimeterId)))
+                || (p.SourceType == "incident" && db.Incidents.Any(x => x.Id == p.SourceId && perimeters.Contains(x.PerimeterId))));
+        return (await passages
             .OrderByDescending(p => p.SearchVector.RankCoverDensity(EF.Functions.ToTsQuery("french", tsquery)))
             .Take(Candidates).Select(p => new { p.SourceType, p.SourceId, p.Id }).ToListAsync())
             .Select(p => (p.SourceType, p.SourceId, p.Id)).ToList();
@@ -98,7 +112,7 @@ public partial class HybridSearch(AppDbContext db, IEmbeddingClient embeddings, 
     /// Ce paramètre exige pgvector 0.8.0 ou plus : si la requête vectorielle échoue (extension
     /// plus ancienne, base indisponible), la recherche reste lexicale, sans erreur (RAG-02).
     /// </summary>
-    private async Task<List<(string Type, int Id, int Passage)>> SemanticAsync(string query, IReadOnlyCollection<string> types)
+    private async Task<List<(string Type, int Id, int Passage)>> SemanticAsync(string query, IReadOnlyCollection<string> types, int[]? perimeters)
     {
         if (!embeddings.Enabled || !await db.SearchPassages.AnyAsync(p => p.Embedding != null)) return [];
         // Délai court : une recherche ne doit pas attendre un service lent ; le lexical répond seul.
@@ -113,12 +127,24 @@ public partial class HybridSearch(AppDbContext db, IEmbeddingClient embeddings, 
             await db.Database.ExecuteSqlRawAsync("SET LOCAL hnsw.iterative_scan = relaxed_order");
             // Les voisins d'abord (ORDER BY … LIMIT, que sert l'index), le plancher ensuite :
             // un filtre de distance dans la même clause WHERE écarte l'index (pgvector).
+            // Le filtre des périmètres (RAG-13) reste dans la même clause : des EXISTS sous un OU
+            // ne deviennent pas des jointures, ils filtrent le parcours de l'index, que
+            // iterative_scan poursuit jusqu'à trouver assez de voisins visibles.
+            var all = perimeters is null;
+            var ids = perimeters ?? [];
             var rows = await db.Database.SqlQuery<Neighbour>($"""
                 WITH proches AS MATERIALIZED (
                     SELECT "Id" AS "PassageId", "SourceType", "SourceId",
                            "EmbeddingVector" <=> {q}::real[]::vector(1024) AS "Distance"
                     FROM "SearchPassages"
                     WHERE "SourceType" = ANY({kinds})
+                      AND ({all}
+                        OR ("SourceType" = 'article' AND EXISTS (SELECT 1 FROM "KnowledgeArticles" a
+                              WHERE a."Id" = "SearchPassages"."SourceId" AND (a."Status" = 'Publié' OR a."PerimeterId" = ANY({ids}))))
+                        OR ("SourceType" = 'problem' AND EXISTS (SELECT 1 FROM "Problems" x
+                              WHERE x."Id" = "SearchPassages"."SourceId" AND x."PerimeterId" = ANY({ids})))
+                        OR ("SourceType" = 'incident' AND EXISTS (SELECT 1 FROM "Incidents" x
+                              WHERE x."Id" = "SearchPassages"."SourceId" AND x."PerimeterId" = ANY({ids}))))
                     ORDER BY "EmbeddingVector" <=> {q}::real[]::vector(1024)
                     LIMIT {Candidates})
                 SELECT "PassageId", "SourceType", "SourceId" FROM proches

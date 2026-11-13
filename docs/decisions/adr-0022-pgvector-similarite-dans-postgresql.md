@@ -68,7 +68,8 @@ ensuite il grandit à chaque insertion.
 - **Recherche approchée** : HNSW peut manquer un voisin ; sur 20 candidats reclassés
   exactement, l'effet est négligeable, à vérifier sur des données réelles : le calibrage de RAG-10 (2026-11-09) a été mesuré avant pgvector, avec un cosinus exact en mémoire.
 - **Suite possible** : le filtre des périmètres (RAG-13, aujourd'hui après le classement)
-  peut entrer dans la requête SQL ; ce sera le préalable d'un serveur MCP.
+  peut entrer dans la requête SQL ; ce sera le préalable d'un serveur MCP. *Fait le
+  2026-11-11 (#281) : filtre dans la requête, l'index HNSW reste utilisé.*
 
 ## Alternatives envisagées
 
