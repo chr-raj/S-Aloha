@@ -39,7 +39,11 @@ public class ServiceRequestsController(AppDbContext db) : RecordController<Servi
         _dueChangedByUser = !creating && !IsManager && due != e.DueDate && !sameDay;
         if (creating || e.CatalogItemId is null || (due != e.DueDate && !sameDay)) e.DueDate = due;
         e.RejectionReason = string.IsNullOrWhiteSpace(dto.RejectionReason) ? null : dto.RejectionReason.Trim();
-        e.ServiceId = dto.ServiceId; e.AffectedService = dto.AffectedService ?? "";
+        // La fiche n'envoie que le service du catalogue : sans lui ni libellé dans le corps, le
+        // libellé hors catalogue enregistré (SLM-10) est gardé, sinon REQ-04 y verrait une
+        // modification. Le libellé d'un service du catalogue qu'on retire, lui, part avec lui.
+        if (dto.AffectedService is not null || dto.ServiceId is not null || e.ServiceId is not null) e.AffectedService = dto.AffectedService ?? "";
+        e.ServiceId = dto.ServiceId;
         return null;
     }
 
